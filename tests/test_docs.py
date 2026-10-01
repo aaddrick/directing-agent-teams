@@ -53,7 +53,7 @@ class DocsTest(unittest.TestCase):
                     self.assertTrue((DIAGRAMS / f"{body.stem}-{mode}.svg").exists())
 
     def test_every_diagram_is_embedded(self):
-        text = "\n".join(p.read_text(encoding="utf-8") for p in DOCS.rglob("*.md"))
+        text = "\n".join(p.read_text(encoding="utf-8") for p in [*DOCS.rglob("*.md"), ROOT / "README.md"])
         for body in DIAGRAMS.glob("*.d2"):
             if body.name.startswith("theme-"):
                 continue
