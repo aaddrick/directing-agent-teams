@@ -73,12 +73,10 @@ Claude asks for what only you can give (a reference image, the tone, delivery sp
 
 ## How it works
 
-```
-you ── main session ── Director ──┬── builder ⇄ verifier   (one slice: one test, one artefact, 20–60 min)
-       (relays only)   (no code)  ├── builder ⇄ verifier
-                                  ├── taste reviewer        (looks at the images, recommends)
-                                  └── contrarian            (pre-mortem on the plan)
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/readme-team-dark.svg">
+  <img alt="You talk to the main session, which only relays, and it talks to the Director, which writes no code. The Director fans out to the team: builder and verifier pairs, one slice each (one test, one artefact, 20 to 60 minutes), a taste reviewer that looks at the images and recommends, and a contrarian that runs a pre-mortem on the plan" src="docs/diagrams/readme-team-light.svg">
+</picture>
 
 - **Nobody certifies their own work.** Verifiers measure the built output, and a builder's claim reaches you as "unverified until QA".
 - **Cheap options before anything expensive.** You pick from a contact sheet before a full render or long run.

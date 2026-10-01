@@ -11,6 +11,7 @@ Read this before editing anything in `docs/diagrams/`. The rules here were learn
 | `run-lifecycle.d2` | Launch to report. Embedded in `docs/architecture/run-lifecycle.md`. |
 | `slice-loop.d2` | One builder and its verifier. Embedded in `docs/architecture/slices-and-qa.md`. |
 | `learning.d2` | Project to user to upstream. Embedded in `docs/architecture/learning.md`. |
+| `readme-team.d2` | The relay chain and the Director's fan-out. Embedded in `README.md` under "How it works". |
 | `render.sh` | Regenerates every SVG. The only supported way to produce them. |
 | `*-light.svg`, `*-dark.svg` | **Generated.** Never hand-edit. |
 

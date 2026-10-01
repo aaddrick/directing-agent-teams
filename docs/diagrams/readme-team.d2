@@ -1,0 +1,23 @@
+# The README's "How it works" picture: the relay chain and the Director's
+# fan-out. A simpler cut of team-structure.d2 (no BOARD, no leads).
+# Branches, so dagre, not a grid.
+
+direction: right
+
+user: "You" { class: human }
+main: "Main session\nrelays only" { class: stage }
+dir: "Director\nno code" { class: gate }
+team: "Team" {
+  class: phase
+  s1: "Builder ⇄ verifier\none slice · one test · one artefact · 20–60 min" { class: stage }
+  s2: "Builder ⇄ verifier\none slice · one test · one artefact · 20–60 min" { class: stage }
+  taste: "Taste reviewer\nlooks at the images, recommends" { class: stage }
+  con: "Contrarian\npre-mortem on the plan" { class: stage }
+}
+
+user <-> main: { class: flow }
+main <-> dir: { class: flow }
+dir -> team.s1: { class: flow }
+dir -> team.s2: { class: flow }
+dir -> team.taste: { class: flow }
+dir -> team.con: { class: flow }
