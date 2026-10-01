@@ -1,0 +1,15 @@
+# One slice: one component or question, one numeric test, one artefact, one
+# owner, a 20-60 minute box. Branches, so dagre, not a grid.
+
+direction: right
+
+card: "Slice card on BOARD\n\ngoal · test · artefact\nbox · must-still-hold" { class: stage }
+build: "Builder\n\nbuilds in owned paths\nself-checks with QA's tool" { class: stage }
+verify: "Verifier\n\nmeasures the built output\nsaves evidence" { class: gate }
+pass: "PASS\n\nmerged · reported per slice" { class: terminal }
+next: "FAIL after the fix round\n\nfresh slice, or the question\ngoes up to the Director" { class: optional }
+
+card -> build: { class: flow }
+build <-> verify: "artefact ⇄ verdict\none fix round" { class: loop }
+verify -> pass: { class: flow }
+verify -> next: { class: flow }

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "directing-agent-teams",
+  "description": "A skill and nine agents for handing a large, multi-workstream build to a team of Claude Code subagents run by one Director.",
+  "owner": {
+    "name": "aaddrick",
+    "url": "https://github.com/aaddrick"
+  },
+  "plugins": [
+    {
+      "name": "directing-agent-teams",
+      "description": "Teaches Claude to launch one Director, relay between it and you, and let it run time-boxed builder/verifier slices with independent QA, alignment gates, resource locks and clean handoffs.",
+      "source": "./",
+      "category": "development",
+      "keywords": [
+        "subagents",
+        "multi-agent",
+        "orchestration",
+        "adversarial-qa"
+      ]
+    }
+  ]
+}

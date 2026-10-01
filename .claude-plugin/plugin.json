@@ -1,0 +1,20 @@
+{
+  "name": "directing-agent-teams",
+  "version": "0.1.0",
+  "description": "Claude Code skill and agents for running a large build with a team of subagents: one Director, time-boxed builder/verifier slices, adversarial QA, alignment gates, shared-resource locks, and handoffs that survive context deaths and overnight runs.",
+  "author": {
+    "name": "aaddrick",
+    "url": "https://github.com/aaddrick"
+  },
+  "homepage": "https://github.com/aaddrick/directing-agent-teams",
+  "repository": "https://github.com/aaddrick/directing-agent-teams",
+  "license": "MIT",
+  "keywords": [
+    "subagents",
+    "multi-agent",
+    "orchestration",
+    "director",
+    "adversarial-qa",
+    "agent-skill"
+  ]
+}

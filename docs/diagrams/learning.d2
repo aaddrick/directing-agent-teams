@@ -1,0 +1,22 @@
+# How a lesson moves from one run to every run. The plugin's own files are
+# never edited in place. A chain, so it's a grid snake.
+
+grid-rows: 2
+grid-columns: 3
+horizontal-gap: 90
+vertical-gap: 70
+
+# row 1, left to right
+slice: "A slice teaches\nsomething\n\na check that caught a failure\nor a failure a check missed" { class: stage }
+proj: "Project .claude/\n\nagents/ · Lessons, new types\nimplementations/ · case study" { class: stage }
+report: "Final report\n\nwhat changed · promote lines\nsuggested skill changes" { class: stage }
+# row 2, right to left
+pr: "Pull request\n\nships to everyone\nwith the plugin" { class: human }
+user: "~/.claude/\n\nused by every project" { class: terminal }
+promote: "/directing-agent-teams:promote\n\nmove + merge · backup" { class: human }
+
+slice -> proj: "Director writes" { class: flow }
+proj -> report: { class: flow }
+report -> promote: { class: flow }
+promote -> user: { class: flow }
+user -> pr: "worth sharing" { class: flow }

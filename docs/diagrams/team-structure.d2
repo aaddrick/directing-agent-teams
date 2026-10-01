@@ -1,0 +1,36 @@
+# Who talks to whom. Only the top two layers are fixed; everything inside
+# "Designed per project" changes from run to run.
+#
+# A grid, with the team as ONE container cell so the Director's fan-out is a
+# single vertical edge (see CLAUDE.md, "Column width is shared"). Row 1 reads
+# left to right; row 2 is declared left to right with a spacer first.
+
+grid-rows: 2
+grid-columns: 3
+horizontal-gap: 110
+vertical-gap: 80
+
+# row 1
+user: "You\n\nreferences · picks\nrequirement changes" { class: human }
+main: "Main session\n\nwrites the plan\nthen only relays" { class: stage }
+dir: "Director\n\ndesigns the team · holds gates\nwrites no product code" { class: gate }
+# row 2
+sp1: "" { style.opacity: 0 }
+board: "BOARD.md\n\nRoster · Status · Decisions\nInbox · Resource log" { class: terminal }
+team: "Designed per project" {
+  class: phase
+  grid-rows: 2
+  grid-columns: 2
+  horizontal-gap: 24
+  vertical-gap: 24
+  slice: "Builder ⇄ verifier\none per slice" { class: stage }
+  lead: "Lead + ≤ 2 workers\nwhen a workstream\nneeds them" { class: optional }
+  taste: "Taste reviewer\nlooks at the images" { class: stage }
+  con: "Contrarian\npre-mortem on the plan" { class: stage }
+}
+
+user <-> main: "exact words\n⇄ picks, results" { class: flow }
+main <-> dir: "relay\n⇄ confirms" { class: flow }
+dir -> team: "slice cards" { class: flow }
+team -> board: "IDs · status\npointers" { class: loop }
+main <-> board: "reads Roster\n+ Status" { class: loop }

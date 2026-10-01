@@ -1,0 +1,59 @@
+name: plugin loads
+
+# Installs the plugin from this checkout into a scratch config and fails if
+# Claude Code does not load it. Catches load-layer breakage that JSON
+# validation misses, such as an agents or skills path that points at nothing.
+on:
+  pull_request:
+    paths:
+      - .claude-plugin/**
+      - skills/**
+      - agents/**
+      - commands/**
+      - .github/workflows/plugin-load-check.yml
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-load-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned so a CLI release breaks this job on the commit that bumps the pin,
+  # not on an unrelated pull request.
+  CLAUDE_CODE_VERSION: "2.1.286"
+
+jobs:
+  claude-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Claude Code
+        run: npm install -g "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION"
+      - name: Manifests pass the official validator
+        run: claude plugin validate "$GITHUB_WORKSPACE" --strict
+      - name: Install into a scratch config and check it is enabled
+        run: |
+          export CLAUDE_CONFIG_DIR="$RUNNER_TEMP/claude-scratch"
+          mkdir -p "$CLAUDE_CONFIG_DIR"
+          claude plugin marketplace add "$GITHUB_WORKSPACE"
+          claude plugin install directing-agent-teams@directing-agent-teams
+          claude plugin list --json | python3 -c '
+          import json, sys
+          wanted = "directing-agent-teams@directing-agent-teams"
+          plugins = json.load(sys.stdin)
+          if not any(p.get("id") == wanted and p.get("enabled") for p in plugins):
+              print(f"::error::{wanted} did not install and enable"); sys.exit(1)
+          print(f"{wanted} enabled")'
+      - name: The installed copy carries the skill, every agent and every command
+        run: |
+          root=$(find "$RUNNER_TEMP/claude-scratch/plugins" -path "*/directing-agent-teams/*/skills/directing-agent-teams/SKILL.md" | head -1 | xargs -r dirname | xargs -r dirname | xargs -r dirname)
+          [ -n "$root" ] || { echo "::error::installed skill not found"; exit 1; }
+          for a in agents/*.md commands/*.md; do
+            [ -f "$root/$a" ] || { echo "::error::$a missing from the installed plugin"; exit 1; }
+          done
+          echo "skill, $(ls agents/*.md | wc -l) agents and $(ls commands/*.md | wc -l) commands installed at $root"

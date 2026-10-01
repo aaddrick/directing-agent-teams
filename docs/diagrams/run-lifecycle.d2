@@ -1,0 +1,26 @@
+# A run from launch to report. A chain, so it's a grid snake: row 1 reads
+# left to right, the flow drops down the last column, row 2 reads back right
+# to left. See CLAUDE.md for the diagonal rule and spacer cells.
+
+grid-rows: 2
+grid-columns: 4
+horizontal-gap: 110
+vertical-gap: 70
+
+# row 1, left to right
+ask: "Launch questions\n\nreference · tone · delivery\nagent cap" { class: human }
+plan: "Plan + BOARD\n\nPLAN_<project>.md\nBOARD.md" { class: stage }
+m0: "M0 foundations\n\ninterface · proof\ndirection gate" { class: gate }
+m1: "M1 pieces\n\nslices on previews\nQA per slice" { class: stage }
+# row 2, right to left
+sp1: "" { style.opacity: 0 }
+rep: "M3 finish\n\nfinal report · handoff" { class: terminal }
+m2: "M2 integrated\n\nfull run · must match\nthe picked preview" { class: gate }
+pick: "Alignment gate\n\ncontact sheet A–H\nbefore anything expensive" { class: human }
+
+ask -> plan: { class: flow }
+plan -> m0: "spawn Director" { class: flow }
+m0 -> m1: { class: flow }
+m1 -> pick: { class: flow }
+pick -> m2: "pick" { class: flow }
+m2 -> rep: "QA pass" { class: flow }
