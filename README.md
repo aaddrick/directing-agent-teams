@@ -21,7 +21,13 @@ It came out of two real overnight builds: an AR video on a Gaussian-splat room t
 
 <a href="https://www.linkedin.com/feed/update/urn:li:activity:7511020532218195968/"><img src="docs/assets/mech/showcase.jpg" alt="Twelve captioned Cycles stills of the finished mech in a hangar: hero, side, rear, crew for scale, the knee drive, the hands, firing and the sword slash" width="100%"></a>
 
-<p align="center"><em>The mech run's finished model, designed, rigged and rendered by the team. <a href="https://www.linkedin.com/feed/update/urn:li:activity:7511020532218195968/">Watch the video on LinkedIn.</a></em></p>
+<p align="center"><em>A still sheet the team passed up to me for review before committing to the full render.</em></p>
+
+---
+
+https://github.com/user-attachments/assets/fcc6476f-8a33-4f8b-9f29-4c90addfa4d7
+
+<p align="center"><em>The finished 21-second advert render, built by the team from a procedural Blender model, rig and animation.</em></p>
 
 > [!IMPORTANT]
 > Claude Code only. A team of 6 to 14 agents running for hours uses a lot of tokens. Pre-approve the tools your build needs, or a permission prompt stalls the team until you wake up. See [Getting started](docs/getting-started.md).
