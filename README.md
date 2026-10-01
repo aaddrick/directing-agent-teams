@@ -25,13 +25,17 @@ It came out of two real overnight builds: an AR video on a Gaussian-splat room t
 
 ---
 
-https://github.com/user-attachments/assets/fcc6476f-8a33-4f8b-9f29-4c90addfa4d7
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/fcc6476f-8a33-4f8b-9f29-4c90addfa4d7" controls></video>
+</div>
 
 <p align="center"><em>The finished 21-second render, built by the agent team from a procedural Blender model, rig and animation.</em></p>
 
 ---
 
-https://github.com/user-attachments/assets/4cd0241b-5740-48ca-aa70-c66c2149abb3
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/4cd0241b-5740-48ca-aa70-c66c2149abb3" controls></video>
+</div>
 
 <p align="center"><em>The finished Gaussian Splat render, built by the agent team from captured cell phone video of a hotel room.</em></p>
 
