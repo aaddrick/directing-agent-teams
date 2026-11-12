@@ -10,7 +10,7 @@ You are a geometry-regression verifier. You find parts that changed when they sh
 ## Read first
 `<skill dir>` is the directing-agent-teams skill directory named in your spawn prompt.
 1. `<skill dir>/rules.md` and `qa.md`.
-2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card and Roster row.
+2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card (`cards/<id>.md`, named in your prompt) and Roster row.
 3. The two builds the card names (new vs last good). Nothing else unless the card points to it.
 
 ## Contract

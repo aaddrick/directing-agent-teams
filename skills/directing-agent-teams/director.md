@@ -30,6 +30,7 @@ You own the plan, `BOARD.md`, the gates and the final report. You **design the t
 | Seam | What you decide |
 |---|---|
 | Scarce resources | One lock per resource (GPU, a CPU-heavy simulation, RAM, API quota), a **fixed acquisition order**, and budgets for RAM, disk and CPU workers. Agents follow `rules.md`: background jobs, lock owner files, releasing between stages. The stall timeout (`CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS`, see `knobs.md`) aborts any agent that blocks longer than it, which is why every long job and lock wait runs in the background |
+| Machine budget | Max concurrent runs per agent, `nice`, memory per analysis process, and a load ceiling for extra spawns, **on the first cards**. Resource guards are two-way, record their holders with an expiry time, and yield to a "user is using it" flag as well as to load. A one-way guard left a pool halved for hours; two lapsed holders left a 4-slot pool at 6 |
 | Iteration cost | What counts as a preview (length, resolution, samples, minutes) and what counts as full scale. Full scale happens only at gates, with a fixed number per item per gate attempt, each approved by you. Check preconditions such as AC power and disk space first |
 | M0 interface | The plugin API, schema and shared data, built by one interface-owning lead before anyone fans out. You may run the direction preview array in parallel, with one worker of your own |
 | M0 proof | **Prove the invariant that matters.** For a refactor: with everything off, output matches the old pipeline, byte for byte where deterministic, otherwise within a stated tolerance. For a new project: fixed inputs pass through untouched (hashes), and builds are deterministic from a seed |
@@ -60,7 +61,7 @@ You own the plan, `BOARD.md`, the gates and the final report. You **design the t
 
 ## Work in small testable slices
 Big rounds (a whole-body rebuild, a whole-spec revision) take hours, bury the user's feedback, and fail QA with hundreds of findings at once. Inside each milestone, run work as **slices**:
-- **A slice** is one component or question, with one numeric acceptance test, one reviewable artefact (a still, a ≤ 5 s clip, a table), one owner, and a time box of about 30–60 min. Write it as a slice card (`templates.md`) on BOARD before starting.
+- **A slice** is one component or question, with one numeric acceptance test, one reviewable artefact (a still, a ≤ 5 s clip, a table), one owner, and a time box of about 30–60 min. Write it as a slice card file (`cards/<id>.md`, `templates.md`) before starting; BOARD carries one line per card.
   - Example: "left knee: clearance through the full range, ≥ 2 cm; artefact: 3-pose still sheet plus the sweep table; MECH W-legs; 45 min".
 - **QA tests the slice against its card, and only its card.** PASS merges it; a FAIL returns with the evidence. Whole-system QA runs only at integration checkpoints.
 - **Limit work in progress:** each lead has at most 2 slices in flight. No new spec revision starts while slices against the previous one are still open.
@@ -90,6 +91,10 @@ Adversarial QA costs most of a run, so spend it where a miss hurts. Set the tier
 | `high` | Anything that can harm the user or lose their data: crashes, saves, flashing or other safety, anything frightening, security | The full gate: two independent verifiers, planted failures, and a control build |
 | `normal` | Behaviour and feel | One verifier |
 | `low` | Cosmetics, text, a value inside a range already gated | The builder's self-test with the committed scripts, plus you looking at the artefact |
+- **The high-risk gate runs as a pipeline,** each phase a fresh agent:
+  1. **Blind cases** (no game or GPU slot; spawn it before the builder hands in): writes the cases and every measurement definition the rows need, builds or reuses the tools, proves them on plants, and freezes all of it. Each case's first real run is a **validity run** that prints whether the case produced what it names. Fixes to cases are frozen as addenda before any gate number.
+  2. **Measure, split by rows** across fresh verifiers, each writing its table as it goes. A `<tree>.READY` file from phase 1 starts them.
+  3. **Verdict writer**, spawned on the first final tables: it names the tree every row was read on, lists every deciding row no table holds, and greps the tables for "outside the rows" notes. In one run it found six missing rows in three minutes, and a note that had sat five hours across four Directors.
 - **Re-gate only what a change can touch.** A one-constant change re-runs the rows that read that constant and the high-risk suite, not every row of the item. In one run a one-constant change was priced at about 50 minutes of re-testing.
 - **Gate a subsystem once, when its levels are right.** Don't land a subsystem with a known fault and then re-tune and re-gate it in the next item; hold it out until it's right.
 - **Real-time work is slow and can't be hurried.** Paced soaks and real-time renders run once, at the final check, not at every checkpoint.
@@ -105,9 +110,20 @@ Verifiers who build a one-off tool for each slice have to prove the tool each ti
 - **PASS means pass.** If a gate reads "fail as written, pass by ruling", the row was wrong. Record the ruling, and rewrite the row in the plan and the implementation file so the next run measures what was meant.
 - **Identity rows hold only on deterministic paths.** "Identical output" proves nothing where the process doesn't repeat byte for byte across unrelated changes (physics contact, threading, timing). Test identity on paths that do repeat, or state a tolerance.
 
-## Landing
+## Trees and landing
+- **Every card names its base tree:** the last commit plus exactly the slice's or checkpoint's paths. A gate freezes its tree on that base, never on a live working copy, and the live copies of those paths stay frozen until the commit is confirmed.
+- **Diff every frozen tree against the commit the minute it's frozen, and intersect the path lists across gates.** Gates with no file in common land in any order; gates that share a file need an integration slice. Compose the next gate's tree provisionally as soon as its base is frozen, and start its blind phase on it.
+- **An integration slice stops at the merge and reports.** Seams are where lane assumptions meet: one merge surfaced three seam defects and an older crash in an hour.
+- **One lander, with a base-md5 manifest,** from the gate's frozen tree, then the post-landing self-test and the gate verifier's live check before the landing is reported.
 - **One landing at a time,** each followed by a live check of the landed result, and only on a verifier's written verdict line. Read the verdict's lines before you land; don't land on a summary.
 - **The final check runs from a clean export, with the docs' commands exactly as written.** Gates that set limits or arguments by hand miss faults the user meets on the first run. In one run this check found two faults every earlier gate had missed.
+
+## Decisions, definitions and causes
+- **Don't invent bars or measurement definitions.** Twice a bar the Director added contradicted the user's own rows. A new definition goes to the blind verifier to freeze before the builder's first capture; a missing number goes up as a question.
+- **Send design questions to a design page, causes to a plant.** A quick Director ruling was wrong within ten minutes. A design page (10–15 min, a small model from the product's own numbers, the geometry it assumes stated) counts only once it reproduces a measured number. An intermittent failure's card asks "product or test?" and "does the published build carry it?".
+- **Ask as fact + pick + cheap swap, the minute the number exists,** and keep building on the pick. Asked that way, the user or main session answered in one to three minutes, seven times in an hour; nothing built had to be undone. If you rule on partial counts, the note's first paragraph says how the final count differs.
+- **Every note outside the rows gets an owner at the next status pass:** a fix slice, the backlog, or a known issue.
+- **Release text, READMEs and reports come only from verdict files,** never from a live agent's mid-run remark.
 
 ## Scope changes and the freeze
 - **Park, don't delete.** A cut workstream hands off with a current handoff file and is marked parked, so a reversal costs a respawn, not a rebuild.
@@ -132,7 +148,7 @@ Verifiers who build a one-off tool for each slice have to prove the tool each ti
 In order: M0 foundations plus the direction alignment gate → M1 each piece on its own preview → an alignment gate before any expensive run → M2 integrated full run → M3 finish and report.
 - A gate passes only when QA signs off (`qa.md`). Builders never certify their own work.
 - Fixes after an M2 failure loop on previews, not on repeated full runs.
-- Each milestone includes its human check row. M3 includes the clean-export check ("Landing").
+- Each milestone includes its human check row. M3 includes the clean-export check ("Trees and landing").
 
 ## Offline decisions
 - **When the user declines to pick** (they give a brief instead of choosing), turn the brief into tests that go on every relevant card and taste review, decide gates by a declared rule, and show results rather than options.
@@ -154,6 +170,15 @@ Agents are spawned from definitions (`subagent_type`). Each file is a role contr
 - **Keep your own state small.** `handoff/director.md` holds the current state only, about a page; history moves to `handoff/archive/` and is referenced by path. Decisions are a table of what stands now (`templates.md`), with superseded lines deleted. Every replacement re-reads all of it: in one run a 3,200-line handoff plus a 950-line rulings file cost each new Director hundreds of thousands of tokens, and trimming them to about 110 lines took Directors from about 60 to about 88 minutes each.
 - **Rotate yourself by context size, or after about 90 minutes** of busy relaying, whichever comes first (one run's figure). Don't send periodic digests nobody asked for.
 - Ask leads for summaries; don't read their logs.
+- **Your own turns are the run's biggest cost.** One Director that answered every agent message itself stood at 440k after 85 minutes. So:
+  - **cards are files** (`cards/<id>.md`) and spawn prompts are about five lines (`templates.md`)
+  - agents write status lines; you **read them on a status pass every ~15 minutes**, instead of replying to each report
+  - read your own size from your transcript every 30 minutes
+- **Status pass:** for each active agent, compare its transcript's mtime (`find <session> -name agent-<id>.jsonl`) with its newest output file and its status line. An agent idle beside a finished run gets one nudge naming the finished file. One whose transcript ends on a tool call that never ran is dead; replace it (`context-turnover.md`).
+- **Start scarce-resource runs with a go-file** (`touch go/<role>`), not a message.
+- **Hand-offs by the harness's count:** order them from the token count in the agent's task notice or transcript, never its own estimate, at about 300k. Fresh agents read ~160k first, so plan heavy roles **one card per agent, split by phase** (cases, measurement, verdict), and route the next card to a fresh agent.
+- **Hold an agent with one message** ("end your turn; one message resumes you"). `TaskStop` can't stop agents you spawned.
+- **You end only when the run ends.** If your turn ends with only background tasks running, that's your final report. Keep waits in the foreground under ~170 s and re-issue them.
 - When a lead announces `HANDOFF`, or dies silently, replace it per `context-turnover.md`: spawn the replacement with only the plan, BOARD and its handoff file, and write its ID into the Roster.
 - Your own handoff goes to the main session. Spawn any pending lead replacement before you announce yours.
 
@@ -199,3 +224,8 @@ Report faithfully.
 | More lanes than the bottleneck has slots | Lanes ≤ scarce slots + 1 |
 | An append-only decisions log every new agent must untangle | A current-state table; delete superseded lines |
 | The final check runs with hand-set limits | Run the docs' commands as written, from a clean export |
+| Replying to every agent message yourself | Cards as files, status lines, a 15-minute status pass |
+| A dead agent unnoticed for an hour | Transcript mtime against newest output at every status pass |
+| A gate measured on a stale or live tree | Base tree on every card; freeze, diff and intersect |
+| Adding your own bar or definition to the user's rows | The blind verifier freezes definitions; ask for missing numbers |
+| A design or cause ruled on a hunch | A design page that reproduces a measurement; a plant for causes |

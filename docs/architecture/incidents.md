@@ -69,3 +69,13 @@ From the game refine run: about 35 hours, 28 Directors and 315 agent IDs, most o
 | Tests never use the user's live data | A test start cut into the log of a game the user was playing |
 | Every background wait has a timeout | A log follower outlived its agent by 34 hours |
 | The final check runs the docs as written, from a clean export | It found two faults every earlier gate had missed, because those gates set limits by hand |
+| The Director reads status on a 15-minute pass; cards are files and prompts are short | A Director that answered every agent message itself stood at 440k after 85 minutes |
+| Stalls are found from transcript mtimes, not pings | Dead or sleeping agents went unnoticed for 22, 63 and 90 minutes; a message to one was swallowed |
+| Scarce runs start on a go-file | A "go" message to an idle verifier showed "Resuming" and produced nothing for 90 minutes |
+| Hand-off marks come from the harness's count, near 300k | Agents read themselves about 70k low; a 150k mark made successors hand off before measuring anything |
+| Every card names its base tree; frozen trees are diffed and intersected | Two fixes were built on a base one checkpoint old; rows were read on the tree before the last fix |
+| High-risk gates run as blind cases → rows → verdict writer | Single verifiers doing all three reached 270k before their first capture |
+| Tools print what they measured | A gap tool charged a neighbouring street light's collider to the stop sign, and the wrong cause reached the user |
+| The Director adds no bars or definitions of its own | Two Director-added bars contradicted the user's own rows |
+| Ask as fact + pick + cheap swap, at once | Asked that way, the main session answered seven times in an hour, in one to three minutes each |
+| Shell traps in `rules.md` | 27 self-matching pollers, pattern-kills hitting another agent's runs four times, two agents dead inside compound `rm -rf` lines |

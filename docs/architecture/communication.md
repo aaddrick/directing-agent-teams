@@ -44,6 +44,10 @@ Two rules keep decisions from getting lost on the way down:
 - **A change goes to the Director and every affected lead,** and the Director confirms in one line. In the AR run, a flight-path change sent to only one place was missed by a storyboard already in progress.
 - **Follow-ups get their own confirmation.** If you add to a change after it was relayed, and the confirmation doesn't mention the addition, the main session asks again.
 
-## Time
+## Reporting to the current Director
 
-Timestamps come from `date`, never from an agent's estimate. In the mech run, agents guessed times, and BOARD timestamps and ETAs ended up hours off.
+Agents read the Director's current ID from the Roster's active Director row before every report, never from their prompt: prompts outlive Directors, and hand-ins sent to a finished Director resume it. Agents write status lines every ~10 minutes instead of messaging the Director for status; the Director reads them on its status pass. Cards are files (`cards/<id>.md`) and spawn prompts about five lines, because the Director's own turns are the run's largest cost.
+
+## Time and other values
+
+Timestamps come from `date`, never from an agent's estimate. In the mech run, agents guessed times, and BOARD timestamps and ETAs ended up hours off. The same goes for md5s, counts and readings: an agent never writes one it didn't read in the same command.

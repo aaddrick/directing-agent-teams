@@ -3,10 +3,12 @@
 Read this, then the plan (`PLAN_<project>.md`) and `BOARD.md`. The plan fills in the project-specific values: lock names and order, preview definitions, owned paths and budgets. These rules apply to you, and to any agent you spawn: tell it to read this file.
 
 ## Communication
+- **Report to the Director's current ID:** read it from the Roster's active Director row before every report, never from your prompt. Prompts outlive Directors.
 - **Message by agent ID** with `SendMessage`. Descriptions don't resolve. You have no `ListAgents`, so find everyone, including whoever spawned you, in **BOARD → Roster**.
 - **When you spawn an agent, write its ID** (from the Agent result) into the Roster immediately, with its role and "spawned by". Nobody else can look it up.
 - **Send status up one level:** workers to their lead, leads to the Director, never to the main session. Also update your BOARD status section.
-- **Timestamps come from `date`,** never estimated. Guessed times on BOARD, ETAs and lock files mislead everyone who reads them.
+- **Never write a time, md5, count or reading you didn't read in the same command** (`date`, `md5sum`, `wc`, the CSV). Typed-in values were wrong at least five times in one run.
+- **Write a status line every ~10 minutes while working** (your BOARD line or `status/<role>.md`). The Director reads them; don't message it for status.
 - **Keep your BOARD status line current.** When your task changes, update it, and include the time from `date`. A stale line is the first thing the main session reads when the user asks for status.
 - **Pointers, not payloads.** Put content in files (`qa/…`, `notes/…`, `handoff/…`) and send paths and one-line verdicts.
 - **Delivery rule:**
@@ -22,6 +24,9 @@ Read this, then the plan (`PLAN_<project>.md`) and `BOARD.md`. The plan fills in
 - **Say who holds a lock:** when you take it, write `<role> <agent ID> PID <pid> expected-end <time>` to `<repo>/.<res>.lock.owner`. Also log the job in BOARD → Resource log with its PID and expected duration. Estimate the duration from similar past jobs in the log. If there's no history, run a short timed sample first.
 - **Run long jobs and lock waits in the background** (Bash `run_in_background`) and poll every few minutes by tailing the log. A foreground wait longer than `CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS` (default 10 min) aborts you, and any blocking wait leaves you deaf to messages.
 - **Every background wait has a time limit.** Wrap wait loops, pollers and log followers in `timeout <duration>` (e.g. `timeout 2h tail -f …`). An agent that dies leaves them running: in one run a log follower outlived its agent by 34 hours.
+- **Wait for your go-file** (`go/<role>`) before a scarce-resource run when your card says so. Build your tools first; the wait is the last step.
+- **Time limits exclude the queue.** A limit that includes the lock wait expires before the run starts; that's not a fault of the code.
+- **Stay inside the card's CPU and memory budget** (concurrent runs, `nice`). One run's agents took a 24-core laptop to load 47 in 15 minutes.
 - **Iterate on previews** as the plan defines them. **Full-scale runs happen only at gates, with the Director's approval**, and within the per-item cap. Check preconditions (e.g. AC power, disk space) first.
 - **Log every job** as one line in BOARD → Resource log: who, what, start and end.
 - If a lock wait times out, read `.<res>.lock.owner` and the Resource log, then post on BOARD and tell your lead or the Director what you found.
@@ -32,16 +37,29 @@ Read this, then the plan (`PLAN_<project>.md`) and `BOARD.md`. The plan fills in
   - Anything else goes to the Director.
   - Find processes with `ps -eo pid,args | awk '/pat/ && !/awk/'`, never `pkill -f`.
 
+## Shell traps (each one cost a run hours)
+- **`pgrep -f X` matches its own command line**, so `until ! pgrep -f X` never ends. Wait on a recorded PID (`while kill -0 $PID`).
+- **`$!` after `setsid nohup <chain> &` isn't the chain's PID.** Have the chain write its own PID file and wait on that.
+- **Stop only PIDs or process groups you recorded at launch.** Pattern kills hit other agents' runs; a group kill doesn't reach a sandboxed child, so check the slot's owner file afterwards.
+- **No `rm -rf` on variable paths inside compound commands**: agents died inside such calls twice. **Never `SIGSTOP`** your own chain.
+- **No `ulimit -v` around the program under test or anything with thread pools** (CAD kernels, BLAS, game engines): it aborts or deadlocks them. Cap only small analysis scripts, in a subshell. A hang under a cap is the cap until proven otherwise.
+- **`/tmp` may be a small shared tmpfs.** Scratch, mutants and `pytest --basetemp` go on the project disk.
+- **Every run gets a quit condition** (frame limit, `timeout`), and every wait loop a `timeout`.
+
 ## Files
 - **Touch only the paths you own** (BOARD → Ownership). For anything else, write the finding (file, line, repro) to `findings/<owner-role>/<time>-<you>.md` and send the owner that path. If it blocks your milestone and there's no ack by your next BOARD update, escalate to the Director.
 - New work goes in new files and directories, and existing deliverables are never overwritten. With no git, back up a file before editing it. Never modify vendored or third-party directories.
 - Before re-running a dead worker's task, move its partial output to `<path>.partial.<time>`. Never delete it.
+- **Output folders are absolute paths under your role's work folder.** Never write inside a frozen, committed or published tree; that includes `.bak` files. A relative output folder wrote into a frozen tree and failed its gate.
+- **Delete your per-run data folders once your verdict is written.** On a reflink filesystem, measure with `btrfs filesystem du -s`, not `du`.
+- **In a shared git repo, commit with the pathspec form** (`git commit <paths> -m …`). The index is shared, and a bare commit takes other agents' staged files.
 - Keep work deterministic (seeded), and **measure before claiming**.
 - **Never use the user's live data.** Tests, previews and test starts use their own data folder, never the user's saves, config or logs. In one run a test start cut into the log of a game the user was playing.
 
 ## Editing BOARD.md
 Every agent writes to BOARD, so edits collide. In one run, concurrent writes erased status sections three times: once before the lock existed, and twice more from whole-file rewrites.
 - **Edit in place, never rewrite the whole file.** Never use Write on BOARD, and never write it out from a copy you read earlier. Use the Edit tool's exact replacement, or a read-modify-write under the lock.
+- **A scripted edit asserts its anchor exists** (a silent no-op lost four slice cards) and writes a temp file, checks the new length ≥ the old, then renames. `open(p,'w').write(open(p).read()+x)` truncates before it reads; one such line wiped BOARD mid-run.
 - **A read-modify-write runs under the BOARD lock:** `flock <repo>/.board.lock <cmd>`. Re-read the file inside the lock, change only your own section or row, write, release. Hold the lock for seconds, never around a long job.
 - **Touch only your own section or row,** plus the Roster row of an agent you just spawned and the Inbox of a role you're writing to.
 - **The Director snapshots BOARD** to `handoff/BOARD.snapshot.md` after each of its own edits, so a lost section can be restored.
@@ -57,7 +75,9 @@ Every agent writes to BOARD, so edits collide. In one run, concurrent writes era
 - **Leads may run jobs themselves.** Worker slots exist for parallelism, not permission. When the delegation rule meets a full slot, do the bounded version yourself (grep, tail, a single preview), or ask the Director for a temporary slot. Don't exceed the cap.
 
 ## Slices
-- Work from a **slice card** on BOARD (goal, acceptance test, artefact, time box). If the card is missing, ask your lead for one before you build.
+- Work from a **slice card** (`cards/<id>.md`: goal, base tree, acceptance test, artefact, budget, time box). If the card is missing, ask your lead for one before you build.
+- **Build on the card's base tree** and check it carries the last checkpoint's files before you start. Twice in one run a fix was built on a base one checkpoint old.
+- **Write results to files as you go.** As soon as your main test passes, write your result line and table, then polish. Files are what survives a silent death.
 - **Stop at the time box.** Report PASS, FAIL or partial with the artefact path, and don't widen the scope to finish.
 - One slice's artefact answers one question. Put other findings in `findings/` for the owner.
 - **Builders:** self-check with the verifier's tool, and state the measurement method with every number. When the verifier's verdict reaches you inside your box, do one fix round against it.

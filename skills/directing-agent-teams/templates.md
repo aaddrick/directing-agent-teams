@@ -92,14 +92,22 @@ Final report: shipped, cut, verdicts, provisional/unverified items, decisions, d
 | D1 | <decision> | <reason> | |
 ```
 
-## Slice card (on BOARD → Status, under the owner's section)
+## Slice card (`cards/<ws>-<n>.md`; BOARD → Status holds one line per card: id, state, owner, path)
 ```markdown
 - SLICE <ws>-<n> [open|pass|fail|partial] owner=<role> box=<min> risk=<high|normal|low> started=<date>
+  base: <commit> + <exact paths>   budget: <concurrent runs, nice, memory per analysis process>
   goal: <one component or question>
   test: <numeric acceptance, e.g. min clearance >= 2 cm over the full range; the plan's deciding row it serves>
   checks: <qa/tools/ scripts to run>  re-gate: <rows this change can touch>
   artefact: <path to still / <=5 s clip / table>
   result: <PASS|FAIL + evidence path>  next: <one line>
+```
+
+## Spawn prompt (about five lines; everything else is in the card)
+```
+You are <role> g<N> in <dir>. Read <skill dir>/rules.md (and qa.md if you check), then cards/<id>.md.
+The Director's current ID is in BOARD → Roster (active Director row); read it before every report.
+Work folder: <absolute path>. Go-file for scarce runs: go/<role>. Hand off near 300k by the harness's count.
 ```
 
 ## handoff/main.md skeleton
@@ -154,5 +162,8 @@ Then run the plan to completion. You coordinate; you write no product code.
   non-high-risk defects go to the Backlog. Verify by each slice's risk tier.
 - Keep handoff/director.md and BOARD → Decisions as current state, about a page each. Rotate yourself by
   context size or after about 90 minutes of busy relaying.
+- Cards are files (cards/<id>.md) and spawn prompts about five lines. Read status lines on a ~15-minute status pass
+  (transcript mtime against newest output); don't reply to every report. Never end your turn with only
+  background tasks running.
 - When done, return the final report described in director.md. Report faithfully.
 ```

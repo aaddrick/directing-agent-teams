@@ -41,6 +41,8 @@ Adversarial QA is most of a run's cost, so it goes where a miss hurts ([`directo
 | normal | Behaviour and feel | One verifier |
 | low | Cosmetics, text, a value inside a range already gated | The builder's self-test with the committed scripts, plus the Director's look |
 
+A high-risk gate runs as a pipeline of fresh agents: **blind cases** (cases, definitions and proven tools, frozen before any number, with a validity run per case), then **measurement split by rows**, then a **verdict writer** that names the tree each row was read on and lists deciding rows no table holds. Each phase fits in one agent's context; one agent doing all three ran out.
+
 A change re-runs only the rows it can touch. In the game refine run every row got the full gate, a 1 cm flag-pole reading as much as the lightning flash, and a one-constant change was priced at about 50 minutes of re-testing.
 
 ## Checks are scripts, rows are fixed
@@ -50,6 +52,7 @@ A change re-runs only the rows it can touch. In the game refine run every row go
 - **PASS means pass.** A gate that lands as "fail as written, pass by ruling" had the wrong rows; the row is rewritten for next time.
 - **Taste goes to a person.** A feel or sound question measured for about 30 minutes without settling goes to the next human check.
 - **One landing at a time,** each with a live check, only on a verifier's written verdict line.
+- **Every card names its base tree:** the last commit plus exactly its paths. Gates freeze on that, never on a live copy. Frozen trees are diffed against the commit and their path lists intersected, which shows which gates can land in any order and which need an integration slice. Twice in the game refine run a fix was built on a base one checkpoint old.
 
 ## A real slice: D72-1
 
@@ -105,6 +108,7 @@ From [`qa.md`](../../skills/directing-agent-teams/qa.md):
 - **The final check runs as you would:** from a clean export, with the docs' commands exactly as written. In the game refine run this found two faults every earlier gate had missed.
 - **Validate measuring tools first.** A new or changed tool must catch a known deep failure before its PASSes count. When a tool is found flawed, every verdict that used it is re-run.
 - **Visible beats accepted.** Before a defect is accepted as a known issue, QA checks whether the shot cameras can see it. If a viewer can see it, it's fix-if-visible.
+- **Measurement integrity.** Every number names its tree, defaults and start state, comes from a tool that prints what it measured and from the program's own exit code, and is read at full precision near a threshold. Visual and audio rows are read on the rendered output from every camera view. Every metric must fail the obvious fake. See [`qa.md`](../../skills/directing-agent-teams/qa.md) → "Measurement integrity".
 - **Unverified is listed, never passed.** Anything no agent can check (how audio sounds, how it looks on a real device) goes in the report as unverified, and onto the milestone's human check.
 
 ## Checks for things that move

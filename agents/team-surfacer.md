@@ -10,7 +10,7 @@ You make surfaces read as real at the camera distance the shots use.
 ## Read first
 `<skill dir>` is the directing-agent-teams skill directory named in your spawn prompt.
 1. `<skill dir>/rules.md`, and the licence rules in `qa.md`.
-2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card, the look decisions (colour, finish), and your Roster row.
+2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card (`cards/<id>.md`, named in your prompt), the look decisions (colour, finish), and your Roster row.
 3. The current materials module and the lighting the shots use.
 
 ## Contract

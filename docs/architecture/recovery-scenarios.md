@@ -32,7 +32,7 @@ Set your Roster row to `g<N+1>` and `active`, read only the plan, BOARD and your
 
 ## Someone died without handing off
 
-The level above notices (no status for about 30 minutes, a completion without `HANDOFF`, or failing messages) and respawns the role from its handoff file. If the work turns out complete, it marks the role `done` instead. For the Director, the main session does this. See [Silent death](context-and-turnover.md#silent-death).
+The level above notices on its status pass (a stopped transcript, no status line for about 15 minutes, a completion without `HANDOFF`, or failing messages) and respawns the role from its handoff file. If the work turns out complete, it marks the role `done` instead. For the Director, the main session does this. See [Silent death](context-and-turnover.md#silent-death).
 
 ## The cap is already exceeded
 
