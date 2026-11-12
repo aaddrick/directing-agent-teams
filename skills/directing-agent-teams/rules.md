@@ -24,6 +24,7 @@ Read this, then the plan (`PLAN_<project>.md`) and `BOARD.md`. The plan fills in
 - **Say who holds a lock:** when you take it, write `<role> <agent ID> PID <pid> expected-end <time>` to `<repo>/.<res>.lock.owner`. Also log the job in BOARD → Resource log with its PID and expected duration. Estimate the duration from similar past jobs in the log. If there's no history, run a short timed sample first.
 - **Run long jobs and lock waits in the background** (Bash `run_in_background`) and poll every few minutes by tailing the log. A foreground wait longer than `CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS` (default 10 min) aborts you, and any blocking wait leaves you deaf to messages.
 - **Every background wait has a time limit.** Wrap wait loops, pollers and log followers in `timeout <duration>` (e.g. `timeout 2h tail -f …`). An agent that dies leaves them running: in one run a log follower outlived its agent by 34 hours.
+- **Start every long job with `<skill dir>/tools/run-job.sh`** (Bash `run_in_background`), unless the plan names another launcher: `run-job.sh --out <abs dir> --timeout 45m [--lock <repo>/.gpu.lock] [--stall 300] --role <role> --agent <id> -- <cmd>`. It takes the lock and writes the owner file with an expiry, records the job's real process group, stops it at the timeout or when its CPU ticks stall (finished, then hung at quit), stops whatever it left running, and writes `<out>/exit`. Linux only.
 - **Wait for your go-file** (`go/<role>`) before a scarce-resource run when your card says so. Build your tools first; the wait is the last step.
 - **Time limits exclude the queue.** A limit that includes the lock wait expires before the run starts; that's not a fault of the code.
 - **Stay inside the card's CPU and memory budget** (concurrent runs, `nice`). One run's agents took a 24-core laptop to load 47 in 15 minutes.
@@ -38,6 +39,7 @@ Read this, then the plan (`PLAN_<project>.md`) and `BOARD.md`. The plan fills in
   - Find processes with `ps -eo pid,args | awk '/pat/ && !/awk/'`, never `pkill -f`.
 
 ## Shell traps (each one cost a run hours)
+`tools/run-job.sh` handles the PID, process-group, quit-condition and leftover-process traps for you; the rest are yours to avoid.
 - **`pgrep -f X` matches its own command line**, so `until ! pgrep -f X` never ends. Wait on a recorded PID (`while kill -0 $PID`).
 - **`$!` after `setsid nohup <chain> &` isn't the chain's PID.** Have the chain write its own PID file and wait on that.
 - **Stop only PIDs or process groups you recorded at launch.** Pattern kills hit other agents' runs; a group kill doesn't reach a sandboxed child, so check the slot's owner file afterwards.
