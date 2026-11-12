@@ -25,6 +25,15 @@ When an agent takes a lock, it writes `<role> <agent ID> PID <pid> expected-end 
 
 A subagent with no progress for `CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS` (default 10 minutes) is aborted, and an agent in a blocking call can't receive messages. So every long job and every lock wait runs with Bash `run_in_background`, and the agent polls every few minutes by tailing the log. A foreground `flock -w 1800` or a 30-minute render can trip the abort.
 
+Agents start long jobs with the skill's launcher, [`tools/run-job.sh`](../../skills/directing-agent-teams/tools/run-job.sh):
+
+```bash
+run-job.sh --out /abs/work/run-07 --timeout 45m --lock /repo/.gpu.lock --stall 300 \
+  --role verifier --agent <id> -- ./run_game.sh --headless --seed 7
+```
+
+It takes the lock and writes `.gpu.lock.owner` with the job's process group and an expiry time. It stops the job at the timeout, or when no process in the job's session has used CPU for `--stall` seconds: a run that finished and then hung at quit held a GPU slot for 45 minutes in the game refine run. When the job ends, for any reason, it stops whatever the job left running, including children that moved to their own process group, then writes `run.log` and `exit` in the output folder. These are the traps agents kept falling into when they wrote this by hand, so the launcher replaces about fifteen dated Lessons.
+
 ## Go-files
 
 When an idle agent's scarce-resource run may start, the Director touches `go/<role>` rather than sending a message: a message to an agent that has ended its turn can be swallowed, a file can't. The agent builds its tools first and makes the go-file wait its last step.
