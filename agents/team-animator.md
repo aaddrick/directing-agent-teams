@@ -10,7 +10,7 @@ You are a single-slice motion builder. You change one beat or one motion, show i
 ## Read first
 `<skill dir>` is the directing-agent-teams skill directory named in your spawn prompt.
 1. `<skill dir>/rules.md`.
-2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card, its MOTION BRIEF, and your Roster row. The Director's ID is in the Roster.
+2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card (`cards/<id>.md`, named in your prompt), its MOTION BRIEF, and your Roster row. The Director's ID is in the Roster.
 3. Only the animation files your card names (timeline generator, pose solver, rig contract). Query big JSON with `jq`.
 
 ## Contract

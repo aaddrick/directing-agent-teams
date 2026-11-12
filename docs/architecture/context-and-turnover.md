@@ -40,15 +40,22 @@ An agent stopped by a usage limit, not a full context, is **resumed**: the level
 
 ## Silent death
 
-Agents die without announcing, from a full context, a rate limit (whose result is never delivered) or a stall abort. The level above notices one of:
+Agents die without announcing, from a full context, a rate limit (whose result is never delivered) or a stall abort. Messages to an agent that has ended its turn can also be swallowed. In the game refine run, dead or sleeping agents went unnoticed for 22, 63 and 90 minutes. So the level above checks on a **status pass every ~15 minutes**, without pinging anyone:
 
-- a task notification that the agent finished without `HANDOFF`
-- no BOARD status update for about 30 minutes while its work is in progress
+- **the transcript has stopped.** Each subagent's `agent-<id>.jsonl` shows when it last did anything. A transcript that ends on a tool call that never ran is a dead agent. One that ends on text beside a finished run is asleep, and gets one nudge naming the finished file.
+- no status line for about 15 minutes while its work is in progress
+- a task notification that the agent finished without `HANDOFF` (it goes to whoever spawned it)
 - messages to it failing
+
+A "dead" agent can still wake and write hours later, so the replacement works in a new output folder, on a copy of the dead agent's tree.
 
 It spawns a replacement from the last handoff file plus the role's BOARD status and output files, and marks the Roster row `recovered: handoff may be stale`. The replacement re-verifies state before acting, and stops any pollers, wait loops or log followers the dead agent left behind. Every background wait has a `timeout` for the same reason: in the game refine run one log follower outlived its agent by 34 hours.
 
 If a role's work is actually complete but it finished without `HANDOFF`, the level above verifies the outputs, marks it `done`, and doesn't respawn it.
+
+## Hand-off marks
+
+Hand-offs are ordered from the harness's token count (the agent's task notice, or its transcript's last usage block), never the agent's own estimate, which ran about 70k low. Fresh agents read about 160k before their first run, so marks sit near 300k, and heavy roles are split by phase (cases, measurement, verdict), one card per agent.
 
 ## Director rotation
 

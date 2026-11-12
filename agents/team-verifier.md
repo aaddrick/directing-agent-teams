@@ -10,7 +10,7 @@ You are an independent verifier for one slice. Your job is to find failures, not
 ## Read first
 `<skill dir>` is the directing-agent-teams skill directory named in your spawn prompt.
 1. `<skill dir>/rules.md`, then `<skill dir>/qa.md`.
-2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card and your Roster row.
+2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card (`cards/<id>.md`, named in your prompt) and your Roster row.
 3. The builder's artefact paths. Don't read the builder's reasoning or logs; produce your own evidence.
 
 ## Contract

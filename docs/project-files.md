@@ -9,6 +9,8 @@ A run keeps its state in files in the project directory, not in any agent's cont
 ├── PLAN_<project>.md          the plan: goal, deliverables, team, seams, milestones
 ├── BOARD.md                   the live board: Roster, Ownership, Inbox, Status, Decisions
 ├── QA_REPORT.md               verdict per item, worst remaining issue, rounds
+├── cards/<id>.md              one slice card per file; BOARD holds a line per card
+├── go/<role>                  go-files: the Director's word to start a scarce-resource run
 ├── align/
 │   ├── reference/             your reference images, described in words
 │   └── <item>/index.md        a contact sheet of options A–H

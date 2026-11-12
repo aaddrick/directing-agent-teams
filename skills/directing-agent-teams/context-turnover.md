@@ -18,6 +18,7 @@ The handoff, delivery and scope rules every agent follows are in `rules.md` → 
 - **Keep the handoff file current at every milestone and major decision,** not only when handing off. A silent death from a full context recovers only as well as the last handoff.
 - **Image-heavy roles fill their context fastest** (reviewing renders, contact sheets, screenshots). They hand off at natural boundaries, well before the limit.
 - **Query large files; don't read them whole.** Use `jq`, `python` or `grep` on specs, logs and JSON.
+- **Hand off by the harness's count** (task notice or the transcript's last usage block), at about 300k, between phases rather than mid-phase. A successor starts at about 150k from its reading list alone, so a 150k mark makes it hand off before measuring anything.
 - **Keep what a replacement must read small.** Handoff files and the Decisions table hold the current state, about a page each; history is archived by path. A replacement's cold start costs whatever it has to read.
 
 ## Stopped vs full
@@ -25,10 +26,13 @@ The handoff, delivery and scope rules every agent follows are in `rules.md` → 
 - **Full context or dead:** replace it as below.
 
 ## Silent death (no HANDOFF announced)
-The level above detects it in one of three ways:
-- a task notification that the agent finished without announcing `HANDOFF`
-- no BOARD status update for about 30 minutes while its work is marked in progress
+The level above detects it on its status pass, without pinging:
+- **the transcript has stopped:** `agent-<id>.jsonl` hasn't changed while no run of the agent's is going. A transcript that ends on a tool call that never ran is a dead agent; one that ends on text beside a finished run is asleep, so send **one nudge** naming the finished file.
+- a task notification that the agent finished without announcing `HANDOFF` (these go to whoever spawned it)
+- no status line for about 15 minutes while its work is marked in progress
 - messages to it failing
+
+A "dead" agent can still wake and write hours later. The replacement works in a **new output folder** and on a copy of the dead agent's tree, and the old ID is told once "do nothing when you're woken".
 
 It recovers by spawning a replacement from the last `handoff/<role>.md`, plus the role's BOARD status and its output files. The replacement also sweeps for the dead agent's leftover pollers, wait loops and log followers (`ps -eo pid,etime,args`) and stops them; they hold nothing but run until found. The Roster row is marked `recovered: handoff may be stale`, and the replacement re-verifies state before acting. Because the handoff is always current, the loss is small.
 

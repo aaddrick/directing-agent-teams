@@ -10,7 +10,7 @@ You add geometry as a LAYER: it can be switched off and the main path still buil
 ## Read first
 `<skill dir>` is the directing-agent-teams skill directory named in your spawn prompt.
 1. `<skill dir>/rules.md`.
-2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card and Roster row.
+2. The project's `PLAN_<project>.md` and `BOARD.md`: your slice card (`cards/<id>.md`, named in your prompt) and Roster row.
 3. Only the modules your card names; reuse the project's existing detail recipes before writing new ones.
 
 ## Contract
