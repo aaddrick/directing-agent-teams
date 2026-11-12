@@ -1,6 +1,6 @@
 # Why it works this way
 
-Most rules in the skill exist because something went wrong in a real run without them. This page pairs each rule with the incident behind it. Most come from the Blender mech run (see its [case study](../../skills/directing-agent-teams/implementations/blender-mech-advert.md)); the rest come from the AR video run in [`examples.md`](../../skills/directing-agent-teams/examples.md) and from the agents' Lessons.
+Most rules in the skill exist because something went wrong in a real run without them. This page pairs each rule with the incident behind it. Most come from the Blender mech run (see its [case study](../../skills/directing-agent-teams/implementations/blender-mech-advert.md)) and the game refine run ([case study](../../skills/directing-agent-teams/implementations/game-refine-run.md)); the rest come from the AR video run in [`examples.md`](../../skills/directing-agent-teams/examples.md) and from the agents' Lessons.
 
 ## Launch and design
 
@@ -50,3 +50,22 @@ Most rules in the skill exist because something went wrong in a real run without
 | The main session checks processes and locks itself after a wind-down | A parked lead's leftover 20-minute wait timer fired and resumed it after the wind-down was reported complete |
 | Park, don't delete | The animation lead was parked through a handoff, so your reversal (cut, then reinstated) cost a respawn instead of a rebuild |
 | A written wind-down procedure | Once it was written down, leads parked in about 15 minutes, with next steps in priority order |
+
+## Cost and scope
+
+From the game refine run: about 35 hours, 28 Directors and 315 agent IDs, most of it spent on coordination and re-testing rather than building.
+
+| Rule | Incident it answers |
+| --- | --- |
+| Agree a budget and a stop line before launch | The run had neither. It began as an overnight run and took 35 hours |
+| Ask user-only choices before launch, and build in the user's order | The first-named goal (engine sound) waited all day on the user's choice of voice, was gated last, and was the one goal that didn't ship |
+| Verify by risk | Every row got the full adversarial gate; a one-constant change was priced at about 50 minutes of re-testing |
+| Checks are committed scripts with planted failures | Verifiers rebuilt the same tools per slice; two were wrong, and their numbers reached decisions |
+| Deciding rows freeze when building starts | One gate picked up five addenda mid-flight, each reopening finished rows; five gates landed "fail as written, pass by ruling" |
+| Lanes ≤ scarce slots + 1 | Five lanes queued on two graphics slots and filled the Director's context hourly |
+| Handoffs and Decisions are current state, about a page | Each new Director re-read a ~3,200-line handoff and a ~950-line rulings file; trimming them took Directors from ~60 to ~88 minutes |
+| Don't rule on one reading | Several rulings and statements to the user rested on one number later corrected |
+| A human check at each milestone | Nobody listened to the sound or held a gamepad; feel questions were measured for hours and still open at the end |
+| Tests never use the user's live data | A test start cut into the log of a game the user was playing |
+| Every background wait has a timeout | A log follower outlived its agent by 34 hours |
+| The final check runs the docs as written, from a clean export | It found two faults every earlier gate had missed, because those gates set limits by hand |

@@ -63,6 +63,11 @@ Before anyone builds, the Director writes these into the plan ([`director.md`](.
 | Missing user inputs | Placeholders, clearly labelled PROVISIONAL, swappable in one step, and listed in the final report |
 | Scope | Deliverables come from you. Ideas from the examples or the team go in the report as optional suggestions, not into the build |
 | Scope risk | Every item is marked core or cuttable up front. After 3 failed QA rounds, the Director cuts it or accepts it with a known issue |
+| Deciding rows | Three to five pass rows per item, written as what the end user meets, frozen when building starts. New asks become new slices; defects that aren't high risk go to a backlog |
+| Risk tier | Each item and slice is high, normal or low risk, which sets how many verifiers it gets. See [slices-and-qa.md](slices-and-qa.md#verify-by-risk) |
+| Checks as scripts | Checks that will run at more than one gate become committed pass/fail scripts with planted failing cases |
+| Human check | About 15 minutes of you at each milestone, for what agents can't measure: sound, feel, a real window or device |
+| User data | Your live saves, config and logs are never touched; tests use their own data folder |
 
 ## Depth
 
@@ -76,7 +81,9 @@ Agents can spawn agents only down to `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` laye
 
 The plan sets a cap on active agents: 6 by default, often 8 to 10 for creative builds with parallel part modellers. Every spawned agent counts, including reviewers, the contrarian and workers. The Director counts; the main session doesn't.
 
-- Every builder needs a verifier, so a new workstream costs two slots. The Director plans the cap at about 2× the concurrent builders, plus 1.
+- Most builders need a verifier (low-risk slices don't), so a new workstream costs up to two slots. The Director plans the cap at about 2× the concurrent builders, plus 1.
+- Parallel lanes stay at the scarcest resource's slots plus one. In the game refine run five lanes queued on two graphics slots, bought little speed, and filled the Director's context.
+- The plan has a model-per-role table, with a reason for every Opus override.
 - Leads that are idle hand off and stop, and are respawned from their handoff file when needed. Turnover doubles as scheduling.
 - Resource locks usually make extra agents sit idle anyway, so a higher cap doesn't always mean faster.
 

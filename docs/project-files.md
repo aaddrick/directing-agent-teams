@@ -36,7 +36,7 @@ The skeletons for the plan, the BOARD, slice cards and handoff files are in the 
 
 ## PLAN_<project>.md
 
-Written by the main session before launch, then owned by the Director. It holds the goal and fixed inputs, references and tone in your words, deliverables, work items marked core or cuttable, the team (Organization), the project's ground-rule values (lock names and order, what counts as a preview, budgets, what never to touch), milestones, and the QA plan.
+Written by the main session before launch, then owned by the Director. It holds the goal and fixed inputs, references and tone in your words, the budget and stop line, your answers to user-only choices, deliverables, work items in your order marked core or cuttable with a risk tier, three to five frozen deciding rows per item, the human checks, a backlog, the team and its models (Organization), the project's ground-rule values (lock names and order, what counts as a preview, budgets, what never to touch), milestones, and the QA plan.
 
 ## BOARD.md
 
@@ -44,12 +44,12 @@ The one place everyone reads. Its sections:
 
 | Section | Holds | Written by |
 |---|---|---|
-| Roster | role, agent ID, spawned by, generation, status, handoff file | whoever spawns an agent, at once |
+| Roster | role, agent ID, spawned by, generation, model, status, handoff file, tokens at end | whoever spawns an agent, at once; tokens when it ends |
 | Ownership | every path the work touches and its owner role | the Director |
 | Inbox | messages for a role that couldn't be delivered | any sender; cleared only by the role's owner |
 | Status | a line per workstream, and slice cards | each role, with the time from `date` |
 | Resource log | one line per job on a scarce resource | whoever runs the job |
-| Decisions | D-numbers: your words and the Director's calls, with reasons | the Director |
+| Decisions | a table of what's decided now: your words and the Director's calls, with reasons. Superseded lines are deleted or archived, not left to be overridden | the Director |
 
 **Edit BOARD in place, under its lock.** Every agent writes to it, and concurrent writes once erased whole sections. Agents change only their own section or row, with the Edit tool or a read-modify-write under `flock .board.lock`, and never rewrite the whole file. The Director snapshots it to `handoff/BOARD.snapshot.md` after its own edits. See [`rules.md`](../skills/directing-agent-teams/rules.md) → Editing BOARD.md.
 
@@ -60,9 +60,10 @@ The one place everyone reads. Its sections:
 A slice card lives on BOARD under its owner's Status section:
 
 ```markdown
-- SLICE <ws>-<n> [open|pass|fail|partial] owner=<role> box=<min> started=<date>
+- SLICE <ws>-<n> [open|pass|fail|partial] owner=<role> box=<min> risk=<high|normal|low> started=<date>
   goal: <one component or question>
-  test: <numeric acceptance, e.g. min clearance >= 2 cm over the full range>
+  test: <numeric acceptance, e.g. min clearance >= 2 cm over the full range; the plan's deciding row it serves>
+  checks: <qa/tools/ scripts to run>  re-gate: <rows this change can touch>
   artefact: <path to still / <=5 s clip / table>
   result: <PASS|FAIL + evidence path>  next: <one line>
 ```
@@ -71,7 +72,7 @@ The Director also lists the neighbouring requirements that must still hold, so a
 
 ## Handoff files
 
-Every lead keeps `handoff/<role>.md` current at every milestone step and before any long wait: files owned, milestone state and next step, D-numbers relied on, live workers (ID, task, output path), open QA findings, what it's waiting on, and gotchas. A replacement is spawned with only the plan, BOARD and this file. See [Context and turnover](architecture/context-and-turnover.md).
+Every lead keeps `handoff/<role>.md` current and short (current state only, about a page; history goes to `handoff/archive/`) at every milestone step and before any long wait: files owned, milestone state and next step, D-numbers relied on, live workers (ID, task, output path), open QA findings, what it's waiting on, and gotchas. A replacement is spawned with only the plan, BOARD and this file. See [Context and turnover](architecture/context-and-turnover.md).
 
 ## Should these go in git?
 
