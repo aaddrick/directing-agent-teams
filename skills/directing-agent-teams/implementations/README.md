@@ -27,3 +27,4 @@ When a run teaches something general, don't edit `SKILL.md`, `director.md`, `qa.
 | File | Project |
 |---|---|
 | `blender-mech-advert.md` | A procedural bpy mech (a ~18 m headless guardian): model, rig, self-righting, and a 20 s advert-style showcase render |
+| `game-refine-run.md` | A refine run on a playable game its end user was still playing: sound, handling and feel changes landed as a release, with safety-critical rows (flashing, crashes, saves) |

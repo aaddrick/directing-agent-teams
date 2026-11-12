@@ -23,6 +23,8 @@ You own the plan, `BOARD.md`, the gates and the final report. You **design the t
   - The plan shows a per-milestone schedule that fits. Stagger the leads: the interface owner alone at M0, packaging later.
   - Idle leads hand off and are respawned from their handoff file later, so turnover doubles as scheduling.
   - If the work needs more, propose a higher cap to the user in the plan, below `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`. Resource locks usually make extra agents idle anyway.
+- **Lanes:** run at most one more parallel lane than the scarcest resource has slots (two GPU slots → three lanes). Extra lanes queue on the lock, buy little speed, and fill your context with their reports. In one run five lanes shared two graphics slots.
+- **Models:** write a model-per-role table in the plan's Organization section, with a reason for every Opus override. Opus goes to builders on hard slices and the verifier of high-risk rows. Run-and-tabulate verifiers, verdict writers and docs stay on the definition's default. Try a cheaper model on one checkpoint before using it everywhere, and record the result in the implementation file. One run put every role on Opus and its largest cost was coordination, not building.
 
 ## Seams to design up front (all go in the plan)
 | Seam | What you decide |
@@ -34,8 +36,13 @@ You own the plan, `BOARD.md`, the gates and the final report. You **design the t
 | Ownership map | BOARD → Ownership lists **every** path the work touches, including existing shared code. When an owner is done, its paths move to a named owner (you by default). Nothing is unowned |
 | Cross-workstream inputs | Every lead writes `notes/<ws>.md` (methods, key numbers, paths) at each gate. Downstream roles read notes, not code |
 | Missing user inputs | Placeholders, clearly labelled PROVISIONAL and swappable in one step, then listed in the final report |
-| Scope | Deliverables come from the user. Ideas from examples or the team go in the report as optional suggestions |
+| Scope | Deliverables come from the user. Ideas from examples or the team go in the report as optional suggestions. Build them in the order the user named them |
 | Scope risk | Mark each item core or cuttable up front. After 3 failed QA rounds on an item, you record a cut or an accept-with-known-issue decision |
+| Deciding rows | **Three to five pass rows per item, written in the plan before building, then frozen.** Write each as what the end user meets ("a save made mid-level reloads to the same spot"), not as an internal reading. Defects found along the way go to the backlog unless they're high risk (below). See "Fixed rows" |
+| Risk tier | Each item and slice is `high`, `normal` or `low` risk (see "Verify by risk"). The tier sets how many verifiers it gets |
+| Checks as scripts | Which checks will run at more than one gate. Each becomes a committed script in `qa/tools/` (see "Checks are scripts") |
+| Human check | A named ~15 min row per milestone for what agents can't measure (sound, feel, a real window or device), done by the user through the main session |
+| User data | The user's live data folders (saves, config, logs) are never touched. Tests and agents use their own data folder; if the user may use the product during the run, use a separate copy for them and a "someone is using it" watcher that pauses jobs that would disturb them |
 
 ## Alignment gates (preview arrays before long-lead items)
 **Before any long-lead item** (a full render, a training run, a long composition, a research sweep, anything with a large share of the GPU or wall-clock budget), generate a **cheap array of options** and pick one before committing:
@@ -59,7 +66,8 @@ Big rounds (a whole-body rebuild, a whole-spec revision) take hours, bury the us
 - **Limit work in progress:** each lead has at most 2 slices in flight. No new spec revision starts while slices against the previous one are still open.
 - **Freeze interfaces, iterate content.** The spec schema, rig contract and naming are fixed early; slices change values and geometry within them.
 - **Close the builder–checker loop.** The verifier sends its verdict to the builder as well as to you. The builder gets one fix round inside its box, then a fresh slice. Builders self-check with the verifier's own tool from `qa/tools/`, so the numbers agree: builders measuring their own way reported numbers the checkers contradicted.
-- **Every measured problem gets an owner at once:** a fix slice or a known-issue decision, the same hour it's measured. A finding with neither sits unowned (one sat ~90 min before the main session noticed).
+- **Every measured problem gets an owner at once:** a fix slice (high risk only, or inside the current item's rows), a backlog entry, or a known-issue decision, the same hour it's measured.
+- **Taste goes to a person early.** When a feel, sound or look question has been measured for more than about 30 minutes without settling, stop measuring and put it in the next human check. Ten minutes of the user trying it settles what hours of numbers don't. A finding with neither sits unowned (one sat ~90 min before the main session noticed).
 - **Parallel edits to one shared artefact** (a timeline, a scene) happen in per-slice copy directories with explicit output paths. One **integration slice** merges them, and its verifier checks the merged result reproduces each slice's passed numbers.
 - **Move recurring checks into the generators.** When QA keeps catching one failure class (clashes, joint limits, accelerations), make it a shared, tested library the generators use as a hard constraint, validated on the known failure cases, so work comes out right by construction.
 - **Cap sizing:** every builder needs a verifier, so a new workstream costs two slots. Plan the cap at about 2× concurrent builders + 1 and ask the main session to raise it before spawning into a full cap.
@@ -74,6 +82,32 @@ Big rounds (a whole-body rebuild, a whole-spec revision) take hours, bury the us
 - **The approved pick becomes a check.** After an alignment pick, QA turns it into a measurable reference (e.g. outline overlap, key dimensions, a golden output) and later builds are scored against it automatically, so drift fails on its own.
 - **Repeated drift is a method problem.** When the same qualitative miss comes back twice ("rounded" arriving boxy, "concise" arriving long), stop re-briefing. Require the owner to name the technique, prove it on one test piece you review, and add a measurable gate.
 - **Declare intentional exceptions early.** Things that look like failures but are designed (nested parts, allowed overlaps, deliberate duplication) get their pass rule agreed at M1. A strict rule arriving at the final gate fails everything at once.
+
+## Verify by risk
+Adversarial QA costs most of a run, so spend it where a miss hurts. Set the tier on the slice card:
+| Tier | What | Verification |
+|---|---|---|
+| `high` | Anything that can harm the user or lose their data: crashes, saves, flashing or other safety, anything frightening, security | The full gate: two independent verifiers, planted failures, and a control build |
+| `normal` | Behaviour and feel | One verifier |
+| `low` | Cosmetics, text, a value inside a range already gated | The builder's self-test with the committed scripts, plus you looking at the artefact |
+- **Re-gate only what a change can touch.** A one-constant change re-runs the rows that read that constant and the high-risk suite, not every row of the item. In one run a one-constant change was priced at about 50 minutes of re-testing.
+- **Gate a subsystem once, when its levels are right.** Don't land a subsystem with a known fault and then re-tune and re-gate it in the next item; hold it out until it's right.
+- **Real-time work is slow and can't be hurried.** Paced soaks and real-time renders run once, at the final check, not at every checkpoint.
+
+## Checks are scripts
+Verifiers who build a one-off tool for each slice have to prove the tool each time, and a wrong tool's number reaches decisions: in one run a ray hit the neighbouring object, and a level reader left out a fixed gain.
+- **Any check that will run at a second gate becomes a committed script** in `qa/tools/` that prints the measured value and exits pass or fail, with a **planted failing case** next to it that it must catch.
+- **A gate is then a machine run** of the suite. Agents investigate failures and the rows no script can measure; they don't re-derive the passes.
+- The first verifier to need a check writes it this way; later verifiers and builders run it unchanged. Changing a script re-runs its planted case.
+
+## Fixed rows
+- **The rows freeze when building starts.** A new requirement mid-flight, from the user or the main session, becomes the next slice. It doesn't reopen rows that already passed.
+- **PASS means pass.** If a gate reads "fail as written, pass by ruling", the row was wrong. Record the ruling, and rewrite the row in the plan and the implementation file so the next run measures what was meant.
+- **Identity rows hold only on deterministic paths.** "Identical output" proves nothing where the process doesn't repeat byte for byte across unrelated changes (physics contact, threading, timing). Test identity on paths that do repeat, or state a tolerance.
+
+## Landing
+- **One landing at a time,** each followed by a live check of the landed result, and only on a verifier's written verdict line. Read the verdict's lines before you land; don't land on a summary.
+- **The final check runs from a clean export, with the docs' commands exactly as written.** Gates that set limits or arguments by hand miss faults the user meets on the first run. In one run this check found two faults every earlier gate had missed.
 
 ## Scope changes and the freeze
 - **Park, don't delete.** A cut workstream hands off with a current handoff file and is marked parked, so a reversal costs a respawn, not a rebuild.
@@ -98,6 +132,7 @@ Big rounds (a whole-body rebuild, a whole-spec revision) take hours, bury the us
 In order: M0 foundations plus the direction alignment gate → M1 each piece on its own preview → an alignment gate before any expensive run → M2 integrated full run → M3 finish and report.
 - A gate passes only when QA signs off (`qa.md`). Builders never certify their own work.
 - Fixes after an M2 failure loop on previews, not on repeated full runs.
+- Each milestone includes its human check row. M3 includes the clean-export check ("Landing").
 
 ## Offline decisions
 - **When the user declines to pick** (they give a brief instead of choosing), turn the brief into tests that go on every relevant card and taste review, decide gates by a declared rule, and show results rather than options.
@@ -115,7 +150,9 @@ Agents are spawned from definitions (`subagent_type`). Each file is a role contr
 - **Tell the main session in one line** when you add a type or change a contract. New files hot-load, but a running agent may take a few minutes to see a new type. If a spawn is refused, fall back to `general-purpose` with the same model and retry later.
 
 ## Keeping agents in scope, and turnover
-- Context is managed by **decomposition, not counters**, and long contexts are acceptable. Keep every agent in its lane: split growing scopes, and assign out-of-scope findings yourself.
+- Context is managed by **decomposition and small state**. Keep every agent in its lane: split growing scopes, and assign out-of-scope findings yourself. Long contexts are acceptable for workers; for you they're the largest cost of the run.
+- **Keep your own state small.** `handoff/director.md` holds the current state only, about a page; history moves to `handoff/archive/` and is referenced by path. Decisions are a table of what stands now (`templates.md`), with superseded lines deleted. Every replacement re-reads all of it: in one run a 3,200-line handoff plus a 950-line rulings file cost each new Director hundreds of thousands of tokens, and trimming them to about 110 lines took Directors from about 60 to about 88 minutes each.
+- **Rotate yourself by context size, or after about 90 minutes** of busy relaying, whichever comes first (one run's figure). Don't send periodic digests nobody asked for.
 - Ask leads for summaries; don't read their logs.
 - When a lead announces `HANDOFF`, or dies silently, replace it per `context-turnover.md`: spawn the replacement with only the plan, BOARD and its handoff file, and write its ID into the Roster.
 - Your own handoff goes to the main session. Spawn any pending lead replacement before you announce yours.
@@ -130,7 +167,8 @@ It covers:
 - agent definitions added or changed in `.claude/agents/`, and the implementation file in `.claude/directing-agent-teams/implementations/`, with a `/directing-agent-teams:promote <name>` line for each one worth keeping in other projects
 - general rules this run taught, as suggested changes to the skill's files for upstream
 - downloads and licences
-- total resource use from the log
+- total resource use from the log, and tokens per checkpoint from the Roster against the budget
+- the backlog, in priority order, with the evidence kept for each item
 - exact commands to reproduce everything
 - optional suggestions
 
@@ -155,3 +193,9 @@ Report faithfully.
 | A multi-hour whole-system round with hundreds of findings | Time-boxed slices with one test each; integrate on a cadence |
 | Every new user ask re-plans every lead | Queue it as a prioritised slice |
 | Waiting on a lead's completion notification | It's held until the lead's children finish; read the Roster and BOARD status |
+| Every row gets the full adversarial gate, a cosmetic one as much as a crash | Set a risk tier per slice |
+| Each verifier writes its own measuring tool, and one is wrong | Committed check scripts with planted failing cases |
+| Gate rows grow addenda while the gate is running | Freeze the rows; new asks are the next slice |
+| More lanes than the bottleneck has slots | Lanes ≤ scarce slots + 1 |
+| An append-only decisions log every new agent must untangle | A current-state table; delete superseded lines |
+| The final check runs with hand-set limits | Run the docs' commands as written, from a clean export |

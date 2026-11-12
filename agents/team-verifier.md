@@ -23,7 +23,8 @@ You are an independent verifier for one slice. Your job is to find failures, not
 
 ## Feedback loop
 - Send your verdict path to the BUILDER (ID in the Roster) as well as to the Director, PASS or FAIL, with the numbers it must hit.
-- Keep your measurement tool in qa/tools/ and name it in the verdict, so the builder can self-check with the same code.
+- Run the committed checks in qa/tools/ first. A check you have to write that will be needed at another gate goes in as a script that exits pass or fail, with a planted failing case beside it; name it in the verdict, so the builder can self-check with the same code.
+- A number that decides a row needs a second reading or a planted control. A check whose planted failure doesn't trip it is reported as "not proven", not PASS.
 - If the builder does its one fix round inside its box, re-measure once and send the updated verdict.
 
 ## Lessons (append as the project teaches them; date each, keep each to one line)
@@ -39,3 +40,5 @@ You are an independent verifier for one slice. Your job is to find failures, not
 - 2026-09-29: When a builder's shape changes (grooves, cut-outs), measure against the real mesh, not an analytic stand-in (cylinder, box).
 - 2026-09-29: Run your Blender checks through the project's CPU slot wrapper too; verifiers are CPU users.
 - 2026-09-29: Penetration measures must be signed or parity-based (inside/outside agreement), never nearest-face depth: on merged or multi-shell meshes a nearest-face sign caps penetration at half a feature's thickness (a 3 cm finger-in-rib read as 0.8 cm). Validate the measure on a known deep case before trusting a PASS.
+- 2026-11-11: Two one-off measuring tools were wrong in one run (a ray that hit the neighbouring object; a level reader that left out a fixed gain), and both wrong numbers reached decisions. Use the committed scripts, and make any new one catch its planted failing case first.
+- 2026-11-11: "Identical run" rows failed on drives that touched something: contact physics doesn't repeat byte for byte across unrelated changes. Test identity on contact-free paths, or state a tolerance.

@@ -1,6 +1,6 @@
 # Context turnover
 
-The goal is for agents to stop, be replaced or die without losing work, messages or workers. Context size is managed by decomposition and scope (see `director.md`), not by counters, and long contexts are acceptable. Files are the record; messages are only pointers to files.
+The goal is for agents to stop, be replaced or die without losing work, messages or workers. Context size is managed by decomposition, scope and small state files (see `director.md`). Long contexts are acceptable for workers; for the Director they're the run's largest cost, because every replacement re-reads its state. Files are the record; messages are only pointers to files.
 
 ## Rules for every agent
 The handoff, delivery and scope rules every agent follows are in `rules.md` → "Communication" and "Handoff". This file covers what the **level above** does.
@@ -18,6 +18,11 @@ The handoff, delivery and scope rules every agent follows are in `rules.md` → 
 - **Keep the handoff file current at every milestone and major decision,** not only when handing off. A silent death from a full context recovers only as well as the last handoff.
 - **Image-heavy roles fill their context fastest** (reviewing renders, contact sheets, screenshots). They hand off at natural boundaries, well before the limit.
 - **Query large files; don't read them whole.** Use `jq`, `python` or `grep` on specs, logs and JSON.
+- **Keep what a replacement must read small.** Handoff files and the Decisions table hold the current state, about a page each; history is archived by path. A replacement's cold start costs whatever it has to read.
+
+## Stopped vs full
+- **Stopped by a usage limit** (or any pause that isn't a full context): **resume it** by messaging its ID once the limit resets. It keeps its context and needs no cold re-read. This is the one case where messaging a stopped agent's ID is right.
+- **Full context or dead:** replace it as below.
 
 ## Silent death (no HANDOFF announced)
 The level above detects it in one of three ways:
@@ -25,7 +30,7 @@ The level above detects it in one of three ways:
 - no BOARD status update for about 30 minutes while its work is marked in progress
 - messages to it failing
 
-It recovers by spawning a replacement from the last `handoff/<role>.md`, plus the role's BOARD status and its output files. The Roster row is marked `recovered: handoff may be stale`, and the replacement re-verifies state before acting. Because the handoff is always current, the loss is small.
+It recovers by spawning a replacement from the last `handoff/<role>.md`, plus the role's BOARD status and its output files. The replacement also sweeps for the dead agent's leftover pollers, wait loops and log followers (`ps -eo pid,etime,args`) and stops them; they hold nothing but run until found. The Roster row is marked `recovered: handoff may be stale`, and the replacement re-verifies state before acting. Because the handoff is always current, the loss is small.
 
 ## Concurrent handoffs
 When the Director hands off while a lead's handoff is pending, the outgoing Director spawns the lead's replacement **before** announcing its own handoff. If that isn't possible, the pending swap goes under "Waiting on" in `handoff/director.md`, so the next Director does it first.
@@ -44,4 +49,6 @@ When the Director hands off while a lead's handoff is pending, the outgoing Dire
 - **Orphaned lock:** if a dead agent's job still holds the resource lock, the current holder of that role may stop it (per `rules.md`, after checking `.<res>.lock.owner` and the Resource log). Otherwise only the Director may stop it. It first confirms the owner is dead or recovered on the Roster, and that the process belongs to this team's job, not the user's. It records a D-number. `flock` releases the lock when the process exits.
 
 ## Proactive Director rotation (learned 2026-09-29)
-A Director relaying a busy flat-slice team (10–14 agents, ~100 D-numbers) died of "prompt too long" after about 6 hours, and its handoff file was hours stale. Rotate the Director at each major phase (e.g. at the freeze, before the full render), and require it to rewrite `handoff/director.md` at every milestone. When one dies, the main session seeds the replacement from BOARD (Roster, Status, the latest D-numbers) and the live agents' IDs, and tells it to grep BOARD rather than read it whole.
+A Director relaying a busy flat-slice team (10–14 agents, ~100 D-numbers) died of "prompt too long" after about 6 hours, and its handoff file was hours stale. Rotate the Director at each major phase (e.g. at the freeze, before the full render), and require it to rewrite `handoff/director.md` at every milestone.
+
+A later run (2026-11) rotated hourly but each Director still re-read a ~3,200-line handoff and a ~950-line rulings file, about 630k–710k tokens per generation. A narrower brief (about 135 lines of rulings, only the agents the remaining work named, no periodic digests, rotation by context size or after about 90 minutes) took Directors from about 60 to about 88 minutes each. Both figures are from one run. When one dies, the main session seeds the replacement from BOARD (Roster, Status, the latest D-numbers) and the live agents' IDs, and tells it to grep BOARD rather than read it whole.

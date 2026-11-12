@@ -29,7 +29,27 @@ It's written as a slice card on BOARD before work starts (see [Project files](..
 4. The builder gets **one fix round** inside its box. The verifier re-measures once.
 5. **PASS** merges the slice. **FAIL** after the fix round becomes a fresh slice. If one item fails twice, the Director stops re-slicing and sends the design question up.
 
-Every measured problem gets an owner the same hour: a fix slice or a known-issue decision.
+Every measured problem gets an owner the same hour: a fix slice, a backlog entry, or a known-issue decision. Only high-risk defects, or ones inside the item's own rows, get a fix slice straight away.
+
+## Verify by risk
+
+Adversarial QA is most of a run's cost, so it goes where a miss hurts ([`director.md`](../../skills/directing-agent-teams/director.md) → "Verify by risk"):
+
+| Tier | What | Verification |
+| --- | --- | --- |
+| high | Harm to the user or their data: crashes, saves, flashing or other safety, anything frightening, security | Two verifiers, planted failures, a control build |
+| normal | Behaviour and feel | One verifier |
+| low | Cosmetics, text, a value inside a range already gated | The builder's self-test with the committed scripts, plus the Director's look |
+
+A change re-runs only the rows it can touch. In the game refine run every row got the full gate, a 1 cm flag-pole reading as much as the lightning flash, and a one-constant change was priced at about 50 minutes of re-testing.
+
+## Checks are scripts, rows are fixed
+
+- **A check that will run at a second gate is a committed script** in `qa/tools/`, exiting pass or fail, with a planted failing case it must catch. A gate is then a machine run; agents investigate the failures. In the game refine run verifiers rebuilt their tools per slice, and two were wrong (a ray that hit the neighbouring street light, a level reader missing a fixed gain).
+- **Deciding rows freeze when building starts.** A new ask becomes the next slice; it doesn't reopen rows that passed. One gate picked up five addenda mid-flight.
+- **PASS means pass.** A gate that lands as "fail as written, pass by ruling" had the wrong rows; the row is rewritten for next time.
+- **Taste goes to a person.** A feel or sound question measured for about 30 minutes without settling goes to the next human check.
+- **One landing at a time,** each with a live check, only on a verifier's written verdict line.
 
 ## A real slice: D72-1
 
@@ -80,10 +100,12 @@ From [`qa.md`](../../skills/directing-agent-teams/qa.md):
 - **Fresh reviewers for each gate,** producing their own evidence.
 - **Every finding has evidence:** a path or frame, plus a saved crop, log excerpt or measurement in `qa/`. Every FAIL has a concrete repro.
 - **Measure the built output.** A result from the spec alone is reported as "spec-only".
-- **Regressions:** unchanged areas still match the old output or the M0 proof.
+- **Regressions:** unchanged areas still match the old output or the M0 proof. Byte-identical comparisons hold only on paths that repeat exactly; elsewhere (contact physics, threads, timing) a stated tolerance.
+- **No ruling on one reading.** A deciding number needs a second reading or a planted control. A check whose planted failure doesn't trip it reports "not proven", not PASS.
+- **The final check runs as you would:** from a clean export, with the docs' commands exactly as written. In the game refine run this found two faults every earlier gate had missed.
 - **Validate measuring tools first.** A new or changed tool must catch a known deep failure before its PASSes count. When a tool is found flawed, every verdict that used it is re-run.
 - **Visible beats accepted.** Before a defect is accepted as a known issue, QA checks whether the shot cameras can see it. If a viewer can see it, it's fix-if-visible.
-- **Unverified is listed, never passed.** Anything no agent can check (how audio sounds, how it looks on a real device) goes in the report as unverified.
+- **Unverified is listed, never passed.** Anything no agent can check (how audio sounds, how it looks on a real device) goes in the report as unverified, and onto the milestone's human check.
 
 ## Checks for things that move
 

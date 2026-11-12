@@ -32,13 +32,18 @@ Each agent reads only its own file, which keeps contexts small.
 1. **Write `PLAN_<project>.md`** from the `templates.md` skeleton: the goal, the deliverables, and what's fixed. Leave team design to the Director.
 2. **Before launch, ask the user for** anything only they can supply (logos, brand colours, credentials, source data), delivery specs (formats, codecs, aspect handling), the agent cap (default 6; creative builds with parallel part modellers often want 8–10), and defaults for open questions.
    - **Designed or visual work (a character, product, vehicle, set, brand): a reference is required, not optional.** Get 1–3 reference images or links and save them to `align/reference/`. Also get the tone and era in the user's own words (e.g. "glossy advert", "gritty documentary", "near-future") and the premise (who uses it, and how). Without a reference, the design gate turns into rounds of guessing: each rejected sheet costs an hour, and one reference image moves the design further than any sheet.
-   - **Ask one round of at most about 5 questions:** the reference, tone/era, identity vs features, delivery, and availability/cap. Propose defaults for everything else in the plan; don't ask about them.
+   - **Ask one round of at most about 5 questions:** the reference, tone/era, identity vs features, delivery, and availability/cap/budget. User-only choices (below) are asked as well, not cut to fit. Propose defaults for everything else in the plan; don't ask about them.
    - **Split the requirements into identity and features.** Ask which items define the thing (e.g. its silhouette, role and scale) and which can wait until the core is picked (e.g. accessories, secondary parts, mechanisms). Features locked in as must-haves constrain the shape work before anyone knows the shape.
+   - **Agree a budget and a stop line:** a token or time budget, and an end time or a "stop after <milestone>". A run with neither drifts: one planned overnight took 35 hours.
+   - **Ask every user-only choice now, while they're present** (a voice, a palette, which of two behaviours). In one run a lane waited all day on such a choice and was the one goal that didn't ship.
+   - **Keep the user's order.** The plan lists goals in the order the user named them, and the Director builds them in that order. The first-named goal is usually the one they care most about.
+   - **Book a human check:** about 15 minutes of the user (or the end user) at each milestone, for what agents can't measure: how it sounds, how it feels in the hand, how it looks in a real window. Put it in the plan as its own row.
 3. **Warn them before launch** that any permission prompt they haven't pre-approved will stall agents overnight.
 4. **Create `BOARD.md`** from the skeleton in `templates.md`.
 5. **Spawn the Director yourself**, with `run_in_background`, `subagent_type: "directing-agent-teams:team-director"` (or `team-director` if the project's `.claude/agents/` or `~/.claude/agents/` has its own copy) and the Director prompt from `templates.md`. Fill `<skill dir>` in that prompt with this skill's base directory, so every agent can find `rules.md` and `qa.md`. If an agent spawns the Director instead, every role loses a layer of depth.
    - **Agent definitions** ship with this plugin as `directing-agent-teams:<type>`: `team-director` (Opus), `team-builder`, `team-verifier` and `team-taste-reviewer` (Sonnet by default), the specialists `team-animator`, `team-extent-verifier`, `team-set-builder` and `team-surfacer`, plus the general `contrarian`. **The Director creates and updates local copies as the work needs** (director.md → "Agent definitions"): new `team-<role>` types, and dated one-line Lessons, in the project's `.claude/agents/`. If one reaches you, forward it to the Director rather than editing the file yourself, unless the user asks you to.
 6. **Write the Director's row** (its agent ID) into `BOARD.md` → Roster immediately. Spawned agents have no `ListAgents`, so the Roster is the only directory.
+7. **Track cost as you go.** When any agent ends, the harness reports its token count; the agent that spawned it writes it in the Roster's Tokens column. Check the total against the budget at each checkpoint, while there's still time to cut.
 
 ## Relaying (your whole job after launch)
 - **The user changes a requirement:** send their exact words to the **Director and directly to each affected lead**, by agent ID from the Roster. Ask the Director to confirm in one line that the change is applied. Work already in flight will predate it.
@@ -55,6 +60,10 @@ Each agent reads only its own file, which keeps contexts small.
 - **Look at clips yourself.** Pull readable frames (e.g. `ffmpeg -vf "select=not(mod(n\,N)),scale=480:-1,tile=4x3"`) or crops rather than trusting thumbnail strips. The main session's own frame reads caught defects the numbers missed.
 - **Check the machine when the team grows** and before long jobs: `uptime` (load vs cores), AC power, free RAM and disk. If load exceeds the core count, ask the Director for a CPU slot lock (N flock slots, pinned threads per job) next to the GPU lock. If on battery, hold long jobs and ask the user to plug in.
 - **Correct yourself promptly.** When a verified-sounding result you relayed is withdrawn (e.g. a measuring-tool flaw), tell the user straight away and say which other results depend on it.
+- **Don't rule on one reading.** A number that decides something, or that you pass to the user, needs a second reading or a planted control first. In one run several rulings and statements to the user rested on a single number that was later corrected.
+- **Rulings mid-flight are scope changes.** A new requirement on a gate that's already running goes to the next slice, not into the open gate as an addendum. Addenda reopen rows that already passed; one gate picked up five.
+- **Keep your rulings as current state.** Write them in one short table of what's decided now (`handoff/rulings.md` or BOARD → Decisions) and delete superseded lines. An append-only rulings file grew to about 1,000 lines, and every new agent had to work out what still stood.
+- **A Director stopped by a usage limit is resumed, not replaced.** Message its ID once the limit resets: it keeps its context and needs no cold re-read. Replace it only when its context is full or it has died.
 - **When the user won't pick:** relay their brief as a D-number, and let the Director decide by rule. Stop ending updates with choices; ask only for what only the user can supply (references, the render go, the cap).
 - **Never message an old agent ID** that has handed off. Messaging a completed agent resumes it with stale context.
 - **Notifications:** use `PushNotification`, if available, only when something needs the user or everything is done. For a sleeping user, one "done" is enough.
@@ -87,3 +96,7 @@ Relay the Director's report as it is, including what's **provisional or unverifi
 | Forcing a taste pick through a multiple-choice widget | Show the images, give your read, and ask openly |
 | Relaying the user's franchise reference without an originality note | Add "original, inspired by, no copying" to the relay |
 | Passing a builder's "it works" to the user as fact | Mark it unverified until QA passes it |
+| Launching with no budget or end time | Agree both before launch; record tokens on the Roster |
+| A user-only choice found mid-run, after the user has left | Ask every such choice before launch |
+| Adding rows to a gate that's already running | Queue it as the next slice |
+| Measuring a feel or sound question for hours | Ask the user to try it for ten minutes |

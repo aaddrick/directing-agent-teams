@@ -21,6 +21,7 @@ Read this, then the plan (`PLAN_<project>.md`) and `BOARD.md`. The plan fills in
 - **Multi-stage jobs** (e.g. bake, then render) **release one lock before taking the next.** Hold several locks at once only when a single step truly uses both, and then take them in the plan's **declared order**.
 - **Say who holds a lock:** when you take it, write `<role> <agent ID> PID <pid> expected-end <time>` to `<repo>/.<res>.lock.owner`. Also log the job in BOARD → Resource log with its PID and expected duration. Estimate the duration from similar past jobs in the log. If there's no history, run a short timed sample first.
 - **Run long jobs and lock waits in the background** (Bash `run_in_background`) and poll every few minutes by tailing the log. A foreground wait longer than `CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS` (default 10 min) aborts you, and any blocking wait leaves you deaf to messages.
+- **Every background wait has a time limit.** Wrap wait loops, pollers and log followers in `timeout <duration>` (e.g. `timeout 2h tail -f …`). An agent that dies leaves them running: in one run a log follower outlived its agent by 34 hours.
 - **Iterate on previews** as the plan defines them. **Full-scale runs happen only at gates, with the Director's approval**, and within the per-item cap. Check preconditions (e.g. AC power, disk space) first.
 - **Log every job** as one line in BOARD → Resource log: who, what, start and end.
 - If a lock wait times out, read `.<res>.lock.owner` and the Resource log, then post on BOARD and tell your lead or the Director what you found.
@@ -36,6 +37,7 @@ Read this, then the plan (`PLAN_<project>.md`) and `BOARD.md`. The plan fills in
 - New work goes in new files and directories, and existing deliverables are never overwritten. With no git, back up a file before editing it. Never modify vendored or third-party directories.
 - Before re-running a dead worker's task, move its partial output to `<path>.partial.<time>`. Never delete it.
 - Keep work deterministic (seeded), and **measure before claiming**.
+- **Never use the user's live data.** Tests, previews and test starts use their own data folder, never the user's saves, config or logs. In one run a test start cut into the log of a game the user was playing.
 
 ## Editing BOARD.md
 Every agent writes to BOARD, so edits collide. In one run, concurrent writes erased status sections three times: once before the lock existed, and twice more from whole-file rewrites.
@@ -60,9 +62,12 @@ Every agent writes to BOARD, so edits collide. In one run, concurrent writes era
 - One slice's artefact answers one question. Put other findings in `findings/` for the owner.
 - **Builders:** self-check with the verifier's tool, and state the measurement method with every number. When the verifier's verdict reaches you inside your box, do one fix round against it.
 - **Verifiers:** send the verdict path to the builder as well as the Director. Prove every new measuring tool on a known failing case before its PASSes count.
+- **Run the committed checks in `qa/tools/` before writing your own.** A check you write that will be needed at another gate goes in as a pass/fail script with its planted failing case.
+- **Rows are fixed.** Don't add rows to a card mid-slice, and don't fix things the card doesn't ask for. Defects you find go to `findings/` or the backlog; the Director decides whether they're high risk.
 
 ## Handoff
-- **Keep `handoff/<role>.md` current**, updating it at every milestone step and before any long wait. It lists:
+- **Sweep your processes at every handover** and before stopping: list what you started (`ps -eo pid,etime,args`), and stop any poller, wait loop or log follower that's yours.
+- **Keep `handoff/<role>.md` current and short**, updating it at every milestone step and before any long wait. It holds the current state only, rewritten rather than appended to; move history to `handoff/archive/`. It lists:
   - files owned
   - milestone state and next step
   - D-numbers relied on

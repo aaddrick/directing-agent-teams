@@ -34,3 +34,4 @@ You are a single-slice builder. You make one change, prove what you can, hand it
 - 2026-09-29: When a card asks for scale props, place people at the subject's depth or behind it, never nearer the lens.
 - 2026-09-29: Builders' self-check numbers can be wrong (D72-4 claimed pelvis drops 0.30/0.43/0.49; the verifier measured 0.298/0.224/0.242). State the measurement method and the evaluated-blend source for every number, and prefer the verifier's tool.
 - 2026-09-29: Scarce CPU: run heavy jobs through the project's CPU slot wrapper and pin threads (blender -t N); check AC power before long or GPU jobs.
+- 2026-11-11: Tests and test starts never use the user's live data folder; one cut into the log of a game the user was playing.

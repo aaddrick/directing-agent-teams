@@ -2,9 +2,9 @@
 
 Agents stop, get replaced or die. The design goal is that none of those loses work, messages or workers. Files are the record; messages are pointers to files. This page covers the mechanics from the level above. [recovery-scenarios.md](recovery-scenarios.md) walks through each situation from the affected agent's side, and [context-management.md](context-management.md) covers keeping contexts small in the first place.
 
-## Decomposition, not counters
+## Decomposition and small state
 
-Context size is managed by keeping every agent in its lane, not by counting tokens. Long contexts are fine. When a scope grows, the Director splits it or hands the out-of-scope finding to its owner. Agents query large files with `jq`, `python` or `grep` instead of reading them whole, and leads send summaries instead of logs.
+Context size is managed by keeping every agent in its lane and keeping what a replacement must read small. Long contexts are fine for workers. For the Director they're the run's largest cost, because every replacement re-reads its state: in the 2026-11 game refine run each Director re-read a ~3,200-line handoff and a ~950-line rulings file, at 370k–710k tokens per generation. Handoff files and the Decisions table therefore hold the current state only, about a page each, with history archived by path. When a scope grows, the Director splits it or hands the out-of-scope finding to its owner. Agents query large files with `jq`, `python` or `grep` instead of reading them whole, and leads send summaries instead of logs.
 
 Image-heavy roles fill their context fastest (reviewing renders, contact sheets, screenshots). In the mech run, leads that reviewed many renders turned over three generations in one day. They hand off at natural boundaries, well before the limit.
 
@@ -34,6 +34,10 @@ The level above replaces it: the main session for the Director, the Director for
 
 The outgoing agent stops right after announcing, so the brief overlap doesn't count against the cap.
 
+## Stopped versus full
+
+An agent stopped by a usage limit, not a full context, is **resumed**: the level above messages its ID once the limit resets, and it carries on with its context intact and no cold re-read. Only an agent whose context is full, or that has died, is replaced.
+
 ## Silent death
 
 Agents die without announcing, from a full context, a rate limit (whose result is never delivered) or a stall abort. The level above notices one of:
@@ -42,7 +46,7 @@ Agents die without announcing, from a full context, a rate limit (whose result i
 - no BOARD status update for about 30 minutes while its work is in progress
 - messages to it failing
 
-It spawns a replacement from the last handoff file plus the role's BOARD status and output files, and marks the Roster row `recovered: handoff may be stale`. The replacement re-verifies state before acting.
+It spawns a replacement from the last handoff file plus the role's BOARD status and output files, and marks the Roster row `recovered: handoff may be stale`. The replacement re-verifies state before acting, and stops any pollers, wait loops or log followers the dead agent left behind. Every background wait has a `timeout` for the same reason: in the game refine run one log follower outlived its agent by 34 hours.
 
 If a role's work is actually complete but it finished without `HANDOFF`, the level above verifies the outputs, marks it `done`, and doesn't respawn it.
 
@@ -52,6 +56,7 @@ A Director relaying a busy flat-slice team (10–14 agents, about 100 D-numbers)
 
 - The Director is rotated at each major phase, for example at the freeze or before the full render.
 - The Director rewrites `handoff/director.md` at every milestone.
+- The Director rotates by context size or after about 90 minutes of busy relaying, whichever comes first. In the game refine run a narrower brief (about 135 lines of rulings, no periodic digests, this rotation rule) took Directors from about 60 to about 88 minutes each. Both figures are from one run.
 - If one dies anyway, the main session seeds the replacement from BOARD (Roster, Status, the latest D-numbers) and the live agents' IDs, and tells it to grep BOARD rather than read it whole.
 
 ## Concurrent handoffs

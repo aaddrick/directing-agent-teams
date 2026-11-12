@@ -16,6 +16,10 @@ The main session, from [`SKILL.md`](../../skills/directing-agent-teams/SKILL.md)
 3. **Ask one round of at most about five questions,** for what only you can supply: the reference, the tone and era in your words, identity versus features, delivery specs, and the cap. Everything else gets a proposed default in the plan.
    - **Designed or visual work needs a reference.** Without one, the design gate turns into rounds of guessing at an hour each.
    - **Identity versus features.** What defines the thing (silhouette, role, scale) is decided first. Features (accessories, mechanisms) wait until the core is picked, so they don't constrain the shape work.
+   - **A budget and a stop line:** tokens, and an end time or a milestone to stop after.
+   - **Every choice only you can make,** asked now while you're present. In the game refine run a lane waited all day on one and was the goal that didn't ship.
+   - **Your order.** Goals are built in the order you named them.
+   - **A human check:** about 15 minutes of you at each milestone, booked in the plan.
 4. **Warn about permission prompts.**
 5. **Create `BOARD.md`**, spawn the Director in the background, and write its ID into the Roster.
 
@@ -27,7 +31,7 @@ The main session, from [`SKILL.md`](../../skills/directing-agent-teams/SKILL.md)
 | M1 pieces | Each piece is built and checked on its own preview, as slices | QA signs off each piece |
 | Alignment gate | A cheap array of options before any expensive run | You pick, or the Director decides by a declared rule |
 | M2 integrated | The full-scale run, which must match the picked preview | QA signs off; drift from the preview is a FAIL |
-| M3 finish | Final QA, README, the final report | QA signs off; the report goes to the main session |
+| M3 finish | Final QA from a clean export running the docs' commands as written, README, the final report | QA signs off; the report goes to the main session |
 
 **The M0 proof** depends on the project. For a refactor, output with every effect off matches the old pipeline, byte for byte where it's deterministic. For a new project, fixed inputs pass through untouched (hashes) and builds are deterministic from a seed.
 
