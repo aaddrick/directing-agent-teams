@@ -31,6 +31,7 @@ These were verified by local tests (marked **tested**), or come from the docs at
 | Task notices go to the agent that **spawned** the child, even after that agent has handed off. | observed |
 | Each subagent's transcript is `<session>/subagents/agent-<id>.jsonl`. Its **mtime shows liveness** without a ping, and its last usage block shows the context size. It can move to a new session folder between generations; find it with `find`. | observed |
 | The **harness's token count** in a task notice (`<subagent_tokens>`) is reliable. Agents' own estimates ran about 70k low. | observed |
+| The harness may **refuse a subagent's Write** of a deliverable named in a report, and a relayed user authorisation didn't change that. The Director, with the user's explicit authorisation, or the Edit tool lands such files. | observed 2026-11-06 |
 | Fresh agents read about **150–160k tokens** (rules, plan, cases, handoff) before their first run, and finished heavy cards at 200–340k without harm. | observed |
 
 ## Consequences for the skill

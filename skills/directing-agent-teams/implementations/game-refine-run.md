@@ -30,6 +30,14 @@ Write these once, as scripts with pass/fail exits and a planted failing case eac
 2. **Per goal:** gate a subsystem once, when its levels are right. Re-gate only the rows a change can touch.
 3. **Final:** one paced soak, then a clean export running the README's commands exactly as written.
 
+### Game-specific checks
+- **A camera row names what else must stay in frame.** A reverse-view gate measured only on the vehicle and road passed a view that hid the sky and the tornado the player backs away from.
+- **Live checks run at fast and slow frame pacing.** A row that sampled "N frames after" an event passed 4 of 4 at the gate and failed live.
+- **A self-test step states its paced duration** (ticks / 60) against the runner's wall-clock limit. A step grown from 87 s to 224 s passed headless and failed the one rendered run, with errors that looked like a product defect.
+- **A rendered tool's own camera can change what the world streams.** Send a rendered lane's unexplained item to the headless lane as a gating row with game-path arms (teleport, respawn, tow, a real drive) before believing or dismissing it.
+- **Godot captures follow `project.godot`'s window size** (1920x1080 gave 10 fps, an ETA three hours out and 13 GB). Put the capture size, an override in the verifier's own harness copy, and "look at one frame first" on the first rendered card.
+- **When the player starts mid-gate,** the CPU pool is the bottleneck and one paced soak holds half of it. Start soaks and the live check's rendered run first, and expect a two-minute headless row to wait seven.
+
 ### Order
 Sound first (the first-named goal, and the one with a user-only choice), then the rest in the user's order. Defects found along the way go to the backlog unless they're high risk.
 
